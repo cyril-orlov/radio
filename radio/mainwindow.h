@@ -24,6 +24,7 @@ signals:
 public slots:
     void timerDone();
     void timerUpdate(int count);
+    void onOptionsChanged();
 
 private:
     Ui::MainWindow *ui;

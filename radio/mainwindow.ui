@@ -17,11 +17,21 @@
    <string/>
   </property>
   <widget class="QWidget" name="centralWidget">
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background:#FFFFFF</string>
+   </property>
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QwtPlot" name="qwtPlot"/>
+       <widget class="QwtPlot" name="qwtPlot">
+        <property name="styleSheet">
+         <string notr="true">background : rgba(255, 255, 255, 1)</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </item>

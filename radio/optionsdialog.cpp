@@ -19,6 +19,8 @@ void OptionsDialog::on_OptionsDialog_accepted()
     options->setTimeLeft(timeLeft);
     options->setBand(band);
     options->setFrequency(frequency);
+
+    emit optionsUpdated();
 }
 
 int OptionsDialog::exec()

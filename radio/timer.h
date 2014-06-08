@@ -12,6 +12,7 @@ class Timer : public QObject
     Q_OBJECT
 public:
     explicit Timer(QObject *parent = 0);
+    virtual ~Timer() { m_worker->deactivate(); }
 
 private:
     Worker* m_worker;

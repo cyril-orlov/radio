@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "timer.h"
+#include "options.h"
 #include "optionsdialog.h"
 
 #include <QApplication>
@@ -10,6 +11,7 @@ int main(int argc, char *argv[])
     MainWindow w;
     OptionsDialog d;
     QObject::connect(&w, &MainWindow::optionsClicked, &d, &OptionsDialog::exec);
+    QObject::connect(&d, &OptionsDialog::optionsUpdated, &w, &MainWindow::onOptionsChanged);
     Timer timer(&w);
     timer.work();
     QObject::connect(&timer, &Timer::done, &w, &MainWindow::timerDone);

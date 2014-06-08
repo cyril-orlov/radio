@@ -15,6 +15,9 @@ public:
     OptionsDialog();
     ~OptionsDialog();
 
+signals:
+    void optionsUpdated();
+
 public slots:
     int exec() override;
 
