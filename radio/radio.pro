@@ -4,11 +4,11 @@
 #
 #-------------------------------------------------
 
-include(M:/Coding/Projects/radio/qwt-6.1.0/qwt.prf)
+include(../../radio/qwt-6.1.0/qwt.prf)
 
-INCLUDEPATH += M:/Coding/Projects/radio/qwt-6.1.0/src
+INCLUDEPATH += ../../radio/qwt-6.1.0/src
 
-DEPENDPATH += M:/Coding/Projects/radio/qwt-6.1.0/lib
+DEPENDPATH += ../../radio/qwt-6.1.0/lib
 
 QT       += core gui
 
