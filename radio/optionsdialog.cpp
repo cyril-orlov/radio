@@ -10,6 +10,10 @@ OptionsDialog::OptionsDialog():
     ui->setupUi(this);
 }
 
+
+void showWarning(QWidget * parent, const QString &title, const QString &text);
+
+
 void OptionsDialog::on_OptionsDialog_accepted()
 {
     int timeLeft = ui->timeEdit->value();
@@ -45,6 +49,7 @@ OptionsDialog::~OptionsDialog()
 void showWarning(QWidget * parent, const QString &title, const QString &text)
 {
     QMessageBox box(parent);
+    box.setIcon(QMessageBox::Icon::Warning);
     box.setWindowTitle(title);
     box.setText(text);
     QSpacerItem* spacer = new QSpacerItem(300, 0, QSizePolicy::Minimum, QSizePolicy::Expanding);

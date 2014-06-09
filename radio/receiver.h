@@ -1,9 +1,11 @@
 #ifndef RECEIVER_H
 #define RECEIVER_H
 
-#include "uhd/usrp/multi_usrp.hpp"
-
 #include <QObject>
+#include "options.h"
+#include "workerrx.h"
+#include "uhd/device.hpp"
+
 
 class Receiver : public QObject
 {
@@ -13,13 +15,21 @@ public:
     virtual ~Receiver(){}
 
 private:
-    uhd::usrp::multi_usrp::sptr m_device;
+
+    WorkerRx* m_worker;
+    QThread* m_thread;
+    QString m_lastAddress;
+    uhd::device::sptr m_device;
+    void connect();
 
 signals:
-    void dataReceived();
+    void dataReceived(Samples* buffer);
 
 public slots:
-    void onDataReceived();
+    void onDataReceived(Samples* buffer);
+    void onOptionsUpdated();
+    void onStarted();
+    void onError(const QString& message);
 };
 
 #endif // RECEIVER_H

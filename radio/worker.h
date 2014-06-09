@@ -3,17 +3,20 @@
 
 #include <QObject>
 #include <QThread>
+#include <QMutex>
 
-#endif // WORKER_H
 class Worker : public QObject
 {
     Q_OBJECT
 
-private:
+protected:
     bool m_active;
+    QThread * m_thread;
+
+private:
     int m_time;
     long m_lastEffectiveTick;
-    QThread * m_thread;
+
 public:
     int getTime()const  { return m_time; }
     void setTime(const int other);
@@ -23,10 +26,13 @@ public:
 
     virtual ~Worker() {}
 
-    void work();
+    virtual void work();
     void deactivate();
 
 signals:
     void done();
     void tick(int count);
+
 };
+
+#endif // WORKER_H

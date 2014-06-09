@@ -1,4 +1,5 @@
 #include "options.h"
+#include <cstddef>
 
 Options* Options::getInstance()
 {

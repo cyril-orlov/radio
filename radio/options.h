@@ -112,10 +112,10 @@ public:
     }
 
 private:
-    int m_frequency;
+    double m_frequency;
 public:
-    int getFrequency()const  { return m_frequency; }
-    void setFrequency(int other)
+    double getFrequency()const  { return m_frequency; }
+    void setFrequency(double other)
     {
         FIRE_CHANGED(m_frequency)
         m_frequency = other;

@@ -11,7 +11,15 @@ INCLUDEPATH += ../qwt-6.1.0/src \
             ../boost_1_55_0
 
 DEPENDPATH += ../qwt-6.1.0/lib \
-            ../uhd/lib
+
+CONFIG(debug, debug|release) {
+    DEPENDPATH += ../uhd/lib
+}
+
+CONFIG(release, debug|release) {
+    DEPENDPATH += ../uhd_release/lib
+}
+
 
 LIBS += -L../uhd/lib -luhd
 
@@ -30,14 +38,16 @@ SOURCES += main.cpp\
     options.cpp \
     timer.cpp \
     worker.cpp \
-    receiver.cpp
+    receiver.cpp \
+    workerrx.cpp
 
 HEADERS  += mainwindow.h \
     options.h \
     optionsdialog.h \
     timer.h \
     worker.h \
-    receiver.h
+    receiver.h \
+    workerrx.h
 
 FORMS    += mainwindow.ui \
     optionsDialog.ui

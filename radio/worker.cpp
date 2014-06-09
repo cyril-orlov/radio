@@ -3,7 +3,8 @@
 
 Worker::Worker(QThread* thread):
     m_thread(thread),
-    m_active(true)
+    m_active(true),
+    m_time(0)
 {
     moveToThread(thread);
 }
@@ -34,7 +35,11 @@ void Worker::work()
         if(m_time > 0)
             emit tick(--m_time);
         else
-            emit done();
+            if(m_time == 0)
+            {
+                emit done();
+                m_time = -1;
+            }
 
         m_lastEffectiveTick += elapsed;
     }

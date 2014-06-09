@@ -1,4 +1,4 @@
-#include <thread>
+#include <QThread>
 #include "timer.h"
 #include "options.h"
 
@@ -19,7 +19,7 @@ void Timer::checkOptions()
 }
 
 void Timer::done_internal()
-{
+{   
     emit done();
 }
 

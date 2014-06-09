@@ -21,6 +21,7 @@ private:
 public:
     int getTime()const  { return m_worker->getTime(); }
     void setTime(const int other) { m_worker->setTime(other); }
+
     void work() { m_thread->start(); }
 
 signals:

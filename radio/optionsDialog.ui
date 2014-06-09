@@ -43,7 +43,7 @@
     <rect>
      <x>11</x>
      <y>10</y>
-     <width>137</width>
+     <width>156</width>
      <height>74</height>
     </rect>
    </property>
@@ -68,18 +68,18 @@
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="frequencyEdit">
-      <property name="suffix">
-       <string> Гц</string>
-      </property>
+     <widget class="QDoubleSpinBox" name="frequencyEdit">
       <property name="prefix">
        <string>Частота: </string>
       </property>
+      <property name="suffix">
+       <string> КГц</string>
+      </property>
       <property name="minimum">
-       <number>1</number>
+       <double>1.000000000000000</double>
       </property>
       <property name="maximum">
-       <number>20000000</number>
+       <double>1000000.000000000000000</double>
       </property>
      </widget>
     </item>
