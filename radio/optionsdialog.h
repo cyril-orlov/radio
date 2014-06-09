@@ -7,6 +7,9 @@ namespace Ui {
 class OptionsDialog;
 }
 
+void showWarning(QWidget * parent, const QString &title, const QString &text);
+
+
 class OptionsDialog : public QDialog
 {
     Q_OBJECT

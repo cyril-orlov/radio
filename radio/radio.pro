@@ -4,11 +4,16 @@
 #
 #-------------------------------------------------
 
-include(../../radio/qwt-6.1.0/qwt.prf)
+include(../qwt-6.1.0/qwt.prf)
 
-INCLUDEPATH += ../../radio/qwt-6.1.0/src
+INCLUDEPATH += ../qwt-6.1.0/src \
+            ../uhd/include \
+            ../boost_1_55_0
 
-DEPENDPATH += ../../radio/qwt-6.1.0/lib
+DEPENDPATH += ../qwt-6.1.0/lib \
+            ../uhd/lib
+
+LIBS += -L../uhd/lib -luhd
 
 QT       += core gui
 
@@ -24,13 +29,16 @@ SOURCES += main.cpp\
     mainwindow.cpp \
     options.cpp \
     timer.cpp \
-    worker.cpp
+    worker.cpp \
+    receiver.cpp
 
 HEADERS  += mainwindow.h \
     options.h \
     optionsdialog.h \
     timer.h \
-    worker.h
+    worker.h \
+    receiver.h
 
 FORMS    += mainwindow.ui \
     optionsDialog.ui
+
