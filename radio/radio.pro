@@ -37,17 +37,21 @@ SOURCES += main.cpp\
     mainwindow.cpp \
     options.cpp \
     timer.cpp \
-    worker.cpp \
     receiver.cpp \
-    workerrx.cpp
+    workerrx.cpp \
+    workertime.cpp \
+    fftransformer.cpp
 
 HEADERS  += mainwindow.h \
     options.h \
     optionsdialog.h \
     timer.h \
-    worker.h \
     receiver.h \
-    workerrx.h
+    workerrx.h \
+    workertime.h \
+    worker.hpp \
+    fftransformer.h \
+    datahelper.hpp
 
 FORMS    += mainwindow.ui \
     optionsDialog.ui

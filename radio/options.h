@@ -113,12 +113,14 @@ public:
 
 private:
     double m_frequency;
+    double m_frequencyMultiplier;
 public:
-    double getFrequency()const  { return m_frequency; }
-    void setFrequency(double other)
+    double getFrequency()const  { return m_frequency * m_frequencyMultiplier; }
+    void setFrequency(double other, double multiplier = 1)
     {
         FIRE_CHANGED(m_frequency)
         m_frequency = other;
+        m_frequencyMultiplier = multiplier;
     }
 
 private:

@@ -1,34 +1,26 @@
-#include "worker.h"
+#include "workertime.h"
 #include "Windows.h"
 
-Worker::Worker(QThread* thread):
-    m_thread(thread),
-    m_active(true),
+WorkerTime::WorkerTime(QThread* thread):
+    Worker(thread),
     m_time(0)
-{
-    moveToThread(thread);
-}
+{}
 
-void Worker::setTime(const int other)
+void WorkerTime::setTime(const int other)
 {
     m_time = other;
     m_lastEffectiveTick = GetTickCount();
 }
 
-void Worker::deactivate()
-{
-    m_active = false;
-    m_thread->wait();
-}
 
-void Worker::work()
+void WorkerTime::work()
 {
-    while(m_active)
+    while(getActive())
     {
         int elapsed = GetTickCount() - m_lastEffectiveTick;
         if(elapsed < 1000)
         {
-            m_thread->msleep(100);
+            getThread()->msleep(100);
             continue;
         }
 
@@ -45,5 +37,5 @@ void Worker::work()
     }
 
     qDebug("timer stopped due to deactivation.\n");
-    m_thread->exit();
+    getThread()->exit(0);
 }

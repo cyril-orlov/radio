@@ -1,79 +1,80 @@
 #include "workerrx.h"
 #include "uhd/stream.hpp"
 #include "uhd/device.hpp"
-#include "uhd/usrp/multi_usrp.hpp"
+#include "uhd/utils/thread_priority.hpp"
 #include "options.h"
 #include <QVector>
 
-WorkerRx::WorkerRx(QThread *thread) :
-    Worker(thread)
+WorkerRx::WorkerRx(const Config& config, QThread *thread) :
+    Worker(thread),
+    m_config(config)
 {
-    QObject::connect(thread, &QThread::started, this, &WorkerRx::work);
-    moveToThread(thread);
+}
+
+void WorkerRx::setCountdown(size_t bufferSize)
+{
+    uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
+    cmd.num_samps = bufferSize;
+    cmd.stream_now = false;
+    cmd.time_spec = m_config.time;
+    m_config.stream->issue_stream_cmd(cmd);
+}
+
+bool WorkerRx::checkMetadataError(const uhd::rx_metadata_t& metadata)
+{
+    if(metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT)
+    {
+        emit error(QString("Превышено время ожидания устройства"));
+        return false;
+    }
+    else
+        if(metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW)
+        {
+            emit error (QString("Промежуточной пропускной способности недостаточно: требуется ") +
+                        QString::number(m_config.device->get_rx_rate() * WorkerRx::SAMPLE_SIZE / 1e6) +
+                        QString("МБ/с"));
+            return false;
+        }
+
+    return true;
 }
 
 void WorkerRx::work()
 {
-    std::string addr = Options::getInstance()->getAddress().toStdString();
-
     try
     {
-        long frequency = Options::getInstance()->getFrequency();
-        uhd::device_addr_t addressHint;
-        addressHint.set(std::string("addr0"), addr);
-        uhd::device_addrs_t found = uhd::device::find(addressHint);
+        uhd::set_thread_priority_safe();
 
-        if(found.size() == 0)
-        {
-            QString message = QString("По адресу <strong>") + Options::getInstance()->getAddress() + QString("</strong> устройств не найдено.");
-            emit error(message);
-            m_thread->exit(1);
-            return;
-        }
+        size_t bufferSize = m_config.frequency / 2;
+        m_config.device->set_rx_rate(bufferSize);
 
-        uhd::usrp::multi_usrp::sptr device = uhd::usrp::multi_usrp::make(found[0]);
-
-        int bufferSize = Options::getInstance()->getFrequency() / 2;
-        device->set_rx_rate(frequency / 2);
-        uhd::rx_streamer::sptr stream = device->get_rx_stream
-                (uhd::stream_args_t("fc64", "sc16"));
-
+        setCountdown(bufferSize);
 
         uhd::rx_metadata_t metadata;
-
-        Samples* data = new Samples(bufferSize);
-        QVector<void*> buffers = QVector<void*>();
-        for(int i = 0; i != stream->get_num_channels(); i++)
-            buffers.push_back(&data->front());
-        while(m_active)
+        // emit data received every step
+        while(getActive())
         {
-            size_t received = stream->recv(buffers, bufferSize, metadata, true);
+            Samples* data = new Samples(bufferSize);
+            QVector<void*> buffers = QVector<void*>();
+            for(int i = 0; i != m_config.stream->get_num_channels(); i++)
+                buffers.push_back(&data->front());
+
+            size_t received = m_config.stream->recv(buffers, bufferSize, metadata, m_config.timeout, false);
             if(received == 0)
                 break;
-            if(metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT)
-            {
-                showWarning(nullptr, QString("Ошибка"), QString("Превышено время ожидания устройства"));
+            if(checkMetadataError(metadata))
                 break;
-            }
-            else
-                if(metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW)
-                {
-                    showWarning(nullptr, QString("Ошибка"),
-                                QString("Промежуточной пропускной способности недостаточно: требуется ") +
-                                QString::number(device->get_rx_rate() * WorkerRx::SAMPLE_SIZE / 1e6) +
-                                QString("МБ/с"));
-                    break;
-                }
 
+            emit dataReceived(data);
         }
-
-        delete data;
     }
     catch(uhd::exception & e)
     {
         qDebug(e.what());
     }
 
-    m_thread->exit(0);
+    m_config.stream->issue_stream_cmd(uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS);
+
+    getThread()->exit(0);
 }
 

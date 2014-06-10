@@ -2,10 +2,14 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QVector>
+#include <complex>
 
 namespace Ui {
 class MainWindow;
 }
+
+typedef std::complex<double> Complex;
 
 class MainWindow : public QMainWindow
 {
@@ -25,6 +29,7 @@ public slots:
     void timerDone();
     void timerUpdate(int count);
     void onOptionsChanged();
+    void onChartChanged(QVector<Complex> * data);
 
 private:
     Ui::MainWindow *ui;

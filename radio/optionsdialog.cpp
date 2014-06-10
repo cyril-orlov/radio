@@ -18,13 +18,13 @@ void OptionsDialog::on_OptionsDialog_accepted()
 {
     int timeLeft = ui->timeEdit->value();
     int band = ui->bandEdit->value();
-    int frequency = ui->frequencyEdit->value();
+    double frequency = ui->frequencyEdit->value();
     QString address = ui->addressEdit->text();
 
     Options* options = Options::getInstance();
     options->setTimeLeft(timeLeft);
     options->setBand(band);
-    options->setFrequency(frequency);
+    options->setFrequency(frequency, 1000);
     if(!options->setAddress(address))
         showWarning(this, QString("Ошибка"), QString("Некорректный адрес устройства"));
 

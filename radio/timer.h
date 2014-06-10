@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QThread>
 #include <QMutex>
-#include "worker.h"
+#include "workertime.h"
 
 
 class Timer : public QObject
@@ -12,10 +12,13 @@ class Timer : public QObject
     Q_OBJECT
 public:
     explicit Timer(QObject *parent = 0);
-    virtual ~Timer() { m_worker->deactivate(); }
+    virtual ~Timer()
+    {
+        m_worker->deactivate();
+    }
 
 private:
-    Worker* m_worker;
+    WorkerTime* m_worker;
     QThread* m_thread;
 
 public:

@@ -1,11 +1,9 @@
-#ifndef WORKER_H
-#define WORKER_H
+#ifndef WORKERTIME_H
+#define WORKERTIME_H
 
-#include <QObject>
-#include <QThread>
-#include <QMutex>
+#include "worker.hpp"
 
-class Worker : public QObject
+class WorkerTime : public Worker
 {
     Q_OBJECT
 
@@ -22,17 +20,14 @@ public:
     void setTime(const int other);
 
 public:
-    Worker(QThread* thread);
+    WorkerTime(QThread* thread);
+    virtual ~WorkerTime() {}
 
-    virtual ~Worker() {}
-
-    virtual void work();
-    void deactivate();
+    void work() override;
 
 signals:
-    void done();
     void tick(int count);
 
 };
 
-#endif // WORKER_H
+#endif // WORKERTIME_H
