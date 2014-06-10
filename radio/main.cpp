@@ -26,8 +26,9 @@ int main(int argc, char *argv[])
     QObject::connect(&d, &OptionsDialog::optionsUpdated, &r, &Receiver::onOptionsUpdated);
     QObject::connect(&timer, &Timer::done, &r, &Receiver::onStarted);
 
-    FFTransformer fft(&w);
+    FFTransformer fft((size_t)Options::getInstance()->getFrequency() / 2, &w);
     QObject::connect(&r, &Receiver::dataReceived, &fft, &FFTransformer::onDataReceived);
+    QObject::connect(&d, &OptionsDialog::optionsUpdated, &fft, &FFTransformer::init);
 
     w.show();
 
@@ -38,7 +39,7 @@ int main(int argc, char *argv[])
 
 void testPlot(MainWindow& w)
 {
-    FFTransformer fft(&w);
+    FFTransformer fft(10, &w);
     QVector<Complex>* testData = new QVector<Complex>;
     testData->append(Complex(0, 1));
     testData->append(Complex(1, 3));

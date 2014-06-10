@@ -8,9 +8,11 @@ include(../qwt-6.1.0/qwt.prf)
 
 INCLUDEPATH += ../qwt-6.1.0/src \
             ../uhd/include \
-            ../boost_1_55_0
+            ../boost_1_55_0 \
+            ../fftw-3.3.4-dll32
 
 DEPENDPATH += ../qwt-6.1.0/lib \
+              ../fftw-3.3.4-dll32
 
 CONFIG(debug, debug|release) {
     DEPENDPATH += ../uhd/lib
@@ -21,7 +23,8 @@ CONFIG(release, debug|release) {
 }
 
 
-LIBS += -L../uhd/lib -luhd
+LIBS += -L../uhd/lib -luhd\
+        -L../fftw-3.3.4-dll32 -llibfftw3-3
 
 QT       += core gui
 

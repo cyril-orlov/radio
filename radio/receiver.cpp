@@ -15,6 +15,13 @@ Receiver::Receiver(QObject *parent) :
 void Receiver::configure()
 {
     m_configured = false;
+
+    if(m_worker != nullptr)
+    {
+        m_worker->deactivate();
+        delete m_worker;
+        m_worker = nullptr;
+    }
     if(m_thread != nullptr)
     {
         m_thread->terminate();
@@ -22,22 +29,22 @@ void Receiver::configure()
         delete m_thread;
         m_thread = nullptr;
     }
-    if(m_worker != nullptr)
-    {
-        delete m_worker;
-        m_worker = nullptr;
-    }
 
-    std::string addr = Options::getInstance()->getAddress().toStdString();
+    Address address = Options::getInstance()->getAddress();
+    std::string addr = address.toString().toStdString();
     uhd::device_addr_t addressHint;
     addressHint.set(std::string("addr0"), addr);
     uhd::device_addrs_t found = uhd::device::find(addressHint);
 
     if(found.size() == 0)
     {
-        onError(QString("По адресу <strong>") +
-                Options::getInstance()->getAddress() +
-                QString("</strong> устройств не найдено."));
+        if(m_lastAddress != address) // only nag about new addresses
+        {
+            onError(QString("По адресу <strong>") +
+                    Options::getInstance()->getAddress().toString() +
+                    QString("</strong> устройств не найдено."));
+            m_lastAddress = address;
+        }
         return;
     }
 
@@ -47,7 +54,6 @@ void Receiver::configure()
     m_device = uhd::usrp::multi_usrp::make(found[0]);
     m_device->set_rx_freq(freq);
     m_device->set_rx_rate(freq / 2);
-    uhd::time_spec_t start();
 
     m_thread = new QThread();
     WorkerRx::Config config;

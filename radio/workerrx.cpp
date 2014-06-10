@@ -50,11 +50,13 @@ void WorkerRx::work()
 
         setCountdown(bufferSize);
 
+        Samples* data = new Samples(bufferSize);
+
         uhd::rx_metadata_t metadata;
         // emit data received every step
         while(getActive())
         {
-            Samples* data = new Samples(bufferSize);
+            data->clear();
             QVector<void*> buffers = QVector<void*>();
             for(int i = 0; i != m_config.stream->get_num_channels(); i++)
                 buffers.push_back(&data->front());
@@ -67,6 +69,8 @@ void WorkerRx::work()
 
             emit dataReceived(data);
         }
+
+        delete data;
     }
     catch(uhd::exception & e)
     {

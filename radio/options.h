@@ -4,7 +4,7 @@
 #include <sstream>
 #include <QStringList>
 
-#define FIRE_CHANGED(option) if(other != option) \
+#define FIRE_CHANGED(option) if(option != other) \
 {\
     emit optionsChanged();\
 }
@@ -29,6 +29,21 @@ struct Address
     byte A, B, C, D;
     //short AB, CD;
    // byte data[4];
+
+    bool operator != (const Address& other)const
+    {
+        return A == other.A && B == other.B && C == other.C && D == other.D;
+    }
+
+    QString toString()const
+    {
+        QString s;
+        s.append(QString::number(A)).append('.')
+        .append(QString::number(B)).append('.')
+        .append(QString::number(C)).append('.')
+        .append(QString::number(D));
+        return s;
+    }
 };
 
 typedef Address* pAddress;
@@ -48,55 +63,33 @@ private:
 #pragma region props
 
 private:
-    pAddress m_address;
+    Address m_address;
 public:
-    ~Options();
+    Address getAddress()const { return m_address; }
 
-    QString getAddress()const
-    {
-        if(m_address == nullptr)
-            return QString("0.0.0.0");
-        QString s;
-        s.append(QString::number(m_address->A)).append('.')
-        .append(QString::number(m_address->B)).append('.')
-        .append(QString::number(m_address->C)).append('.')
-        .append(QString::number(m_address->D));
-        return s;
-    }
 
-    void setAddress(const pAddress& other)
+
+    void setAddress(const Address& other)
     {
         FIRE_CHANGED(m_address)
-        if(m_address != nullptr)
-        {
-            delete m_address;
-            m_address = nullptr;
-        }
-
         m_address = other;
     }
 
     bool setAddress(const QString& src)
     {
-        try
-        {
-            pAddress address = new Address;
-            QStringList splitted = src.split(QChar('.'), QString::SplitBehavior::SkipEmptyParts);
-            if(splitted.length() != 4)
-                throw new std::runtime_error("bad value");
-            bool success[] = { true, true, true, true };
-            address->A = splitted[0].toInt(&success[0]);
-            address->B = splitted[1].toInt(&success[1]);
-            address->C = splitted[2].toInt(&success[2]);
-            address->D = splitted[3].toInt(&success[3]);
-            if(!(success[0] && success[1] && success[2] && success[4]))
-                throw new std::runtime_error("non-int values");
-            m_address = address;
-        }
-        catch(std::runtime_error)
-        {
+        QStringList splitted = src.split(QChar('.'), QString::SplitBehavior::SkipEmptyParts);
+        if(splitted.length() != 4)
             return false;
-        }
+
+        bool success[] = { true, true, true, true };
+        byte A = splitted[0].toInt(&success[0]);
+        byte B = splitted[1].toInt(&success[1]);
+        byte C = splitted[2].toInt(&success[2]);
+        byte D = splitted[3].toInt(&success[3]);
+        if(!(success[0] && success[1] && success[2] && success[3]))
+            return false;
+
+        setAddress(Address(A, B, C, D));
 
         return true;
     }
@@ -113,14 +106,12 @@ public:
 
 private:
     double m_frequency;
-    double m_frequencyMultiplier;
 public:
-    double getFrequency()const  { return m_frequency * m_frequencyMultiplier; }
-    void setFrequency(double other, double multiplier = 1)
+    double getFrequency()const  { return m_frequency; }
+    void setFrequency(double other)
     {
         FIRE_CHANGED(m_frequency)
         m_frequency = other;
-        m_frequencyMultiplier = multiplier;
     }
 
 private:

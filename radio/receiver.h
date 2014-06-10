@@ -20,7 +20,7 @@ private:
 
     WorkerRx* m_worker;
     QThread* m_thread;
-    QString m_lastAddress;
+    Address m_lastAddress;
     uhd::usrp::multi_usrp::sptr m_device;
 
     bool m_configured;
