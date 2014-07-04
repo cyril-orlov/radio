@@ -60,14 +60,20 @@ private:
     Options(const Options& other){}
     Options operator = (const Options & other){}
 
+signals:
+    void optionsChanged();
+
+public:
+    static Options* getInstance();
+    void save(const char * filename = "config.ini")const;
+    bool load(const char * filename = "config.ini");
+
 #pragma region props
 
 private:
     Address m_address;
 public:
     Address getAddress()const { return m_address; }
-
-
 
     void setAddress(const Address& other)
     {
@@ -115,10 +121,10 @@ public:
     }
 
 private:
-    int m_band;
+    double m_band;
 public:
-    int getBand()const  { return m_band; }
-    void setBand(const int& other)
+    double getBand()const  { return m_band; }
+    void setBand(const double& other)
     {
         FIRE_CHANGED(m_band)
         m_band = other;
@@ -126,11 +132,6 @@ public:
 
 #pragma endregion
 
-signals:
-    void optionsChanged();
-
-public:
-    static Options* getInstance();
 };
 
 #undef FIRE_CHANGED

@@ -43,7 +43,7 @@
     <rect>
      <x>11</x>
      <y>10</y>
-     <width>156</width>
+     <width>168</width>
      <height>74</height>
     </rect>
    </property>
@@ -79,23 +79,20 @@
        <double>0.100000000000000</double>
       </property>
       <property name="maximum">
-       <double>1000000.000000000000000</double>
+       <double>100000000.000000000000000</double>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QSpinBox" name="bandEdit">
-      <property name="suffix">
-       <string> Гц</string>
-      </property>
+     <widget class="QDoubleSpinBox" name="bandEdit">
       <property name="prefix">
-       <string>Полоса: </string>
+       <string>Полоса </string>
       </property>
-      <property name="minimum">
-       <number>1</number>
+      <property name="suffix">
+       <string> КГц</string>
       </property>
       <property name="maximum">
-       <number>10000000</number>
+       <double>10000000.000000000000000</double>
       </property>
      </widget>
     </item>

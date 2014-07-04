@@ -49,15 +49,17 @@ void Receiver::configure()
     }
 
     long freq = Options::getInstance()->getFrequency();
+    long band = Options::getInstance()->getBand();
 
     m_configured = true;
     m_device = uhd::usrp::multi_usrp::make(found[0]);
     m_device->set_rx_freq(freq);
-    m_device->set_rx_rate(freq / 2);
+    m_device->set_rx_rate(band / 2);
 
     m_thread = new QThread();
     WorkerRx::Config config;
     config.device = m_device;
+    config.band = band;
     config.frequency = freq;
     config.stream = m_device->get_rx_stream(uhd::stream_args_t("fc64", "sc16"));
     config.time = uhd::time_spec_t(Options::getInstance()->getTimeLeft() + 0.1);
@@ -76,9 +78,9 @@ void Receiver::launch()
     m_thread->start();
 }
 
-void Receiver::onDataReceived(Samples* buffer)
+void Receiver::onDataReceived(Samples buffer, size_t count)
 {
-    emit dataReceived(buffer);
+    emit dataReceived(buffer, count);
 }
 
 void Receiver::onError(const QString& message)

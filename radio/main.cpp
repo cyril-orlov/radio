@@ -39,15 +39,15 @@ int main(int argc, char *argv[])
 
 void testPlot(MainWindow& w)
 {
-    FFTransformer fft(10, &w);
-    QVector<Complex>* testData = new QVector<Complex>;
-    testData->append(Complex(0, 1));
-    testData->append(Complex(1, 3));
-    testData->append(Complex(2, 1));
-    testData->append(Complex(3, 3));
-    testData->append(Complex(4, 1));
-    testData->append(Complex(5, 3));
-    testData->append(Complex(6, 1));
-    testData->append(Complex(7, 3));
-    fft.onDataReceived(testData);
+    FFTransformer fft(8, &w);
+    Complex* testData = new Complex[8];
+    testData[0] = Complex(0, 1);
+    testData[1] = Complex(1, 3);
+    testData[2] = Complex(2, 1);
+    testData[3] = Complex(3, 3);
+    testData[4] = Complex(4, 1);
+    testData[5] = Complex(5, 3);
+    testData[6] = Complex(6, 1);
+    testData[7] = Complex(7, 3);
+    fft.onDataReceived(testData, 8);
 }

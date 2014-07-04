@@ -32,10 +32,10 @@ private:
     void launch();
 
 signals:
-    void dataReceived(Samples* buffer);
+    void dataReceived(Samples buffer, size_t count);
 
 public slots:
-    void onDataReceived(Samples* buffer);
+    void onDataReceived(Samples buffer, size_t count);
     void onOptionsUpdated();
     void onStarted();
     void onError(const QString& message);    

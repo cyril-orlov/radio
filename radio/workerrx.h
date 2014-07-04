@@ -10,7 +10,7 @@
 void showWarning(QWidget * parent, const QString &title, const QString &text);
 
 typedef std::complex<double> Complex;
-typedef QVector<Complex> Samples;
+typedef Complex *Samples;
 
 class WorkerRx : public Worker
 {
@@ -19,7 +19,7 @@ class WorkerRx : public Worker
 public:
     struct Config
     {
-        long frequency;
+        long frequency, band;
         uhd::usrp::multi_usrp::sptr device;
         uhd::rx_streamer::sptr stream;
         uhd::time_spec_t time;
@@ -38,7 +38,7 @@ public:
     explicit WorkerRx(const Config& config, QThread *thread = 0);
 
 signals:
-    void dataReceived(Samples* data);
+    void dataReceived(Samples data, size_t count);
     void error(const QString & message);
 
 public slots:

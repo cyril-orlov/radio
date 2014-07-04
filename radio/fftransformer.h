@@ -23,7 +23,7 @@ public:
 signals:
 
 public slots:
-    void onDataReceived(QVector<Complex> * data);
+    void onDataReceived(Complex * data, size_t count);
     void init();
 
 };

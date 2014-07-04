@@ -19,32 +19,26 @@ void FFTransformer::init()
     m_plan = fftw_plan_dft_1d(m_bufferSize, m_inBuffer, m_outBuffer, FFTW_FORWARD, FFTW_ESTIMATE);
 }
 
-void FFTransformer::onDataReceived(QVector<Complex> * data)
+void FFTransformer::onDataReceived(Complex* data, size_t count)
 {
-    if(data->size() > m_bufferSize)
+    if(count > m_bufferSize)
     {
-        qDebug("data size is bigger than buffer size (FFTRansformer)");
+        qDebug("data size is bigger than buffer size (FFTransformer)");
         return;
     }
 
-    size_t size = data->size();
-    for (auto i = 0; i < size; ++i)
-    {
-        fftw_complex c = { data->at(i).real(), data->at(i).imag() };
-        m_inBuffer[i][0] = c[0];
-        m_inBuffer[i][1] = c[1];
-    }
+    memcpy(m_inBuffer, data, count * sizeof(Complex));
 
     fftw_execute(m_plan);
 
-    data->clear();
-    for (auto i = 0; i < size; ++i)
+    QVector<Complex>* transformed = new QVector<Complex>;
+    for (auto i = 0; i < count; ++i)
     {
         fftw_complex* iter = (m_outBuffer + i);
-        data->append(Complex(*(iter)[0], *(iter)[1]));
+        transformed->append(Complex(*(iter)[0], *(iter)[1]));
     }
 
-    ((MainWindow*)parent())->onChartChanged(data);
+    ((MainWindow*)parent())->onChartChanged(transformed);
 }
 
 FFTransformer::~FFTransformer()

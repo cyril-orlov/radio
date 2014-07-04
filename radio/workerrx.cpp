@@ -9,6 +9,7 @@ WorkerRx::WorkerRx(const Config& config, QThread *thread) :
     Worker(thread),
     m_config(config)
 {
+    setCountdown(config.band / 2);
 }
 
 void WorkerRx::setCountdown(size_t bufferSize)
@@ -31,7 +32,7 @@ bool WorkerRx::checkMetadataError(const uhd::rx_metadata_t& metadata)
         if(metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW)
         {
             emit error (QString("Промежуточной пропускной способности недостаточно: требуется ") +
-                        QString::number(m_config.device->get_rx_rate() * WorkerRx::SAMPLE_SIZE / 1e6) +
+                        QString::number(m_config.device->get_rx_rate() * WorkerRx::SAMPLE_SIZE / (1 << 31)) +
                         QString("МБ/с"));
             return false;
         }
@@ -45,21 +46,17 @@ void WorkerRx::work()
     {
         uhd::set_thread_priority_safe();
 
-        size_t bufferSize = m_config.frequency / 2;
-        m_config.device->set_rx_rate(bufferSize);
+        size_t bufferSize = m_config.band / 2;
 
-        setCountdown(bufferSize);
-
-        Samples* data = new Samples(bufferSize);
+        Samples data = new Complex[bufferSize];
 
         uhd::rx_metadata_t metadata;
         // emit data received every step
         while(getActive())
         {
-            data->clear();
             QVector<void*> buffers = QVector<void*>();
             for(int i = 0; i != m_config.stream->get_num_channels(); i++)
-                buffers.push_back(&data->front());
+                buffers.push_back(&data);
 
             size_t received = m_config.stream->recv(buffers, bufferSize, metadata, m_config.timeout, false);
             if(received == 0)
@@ -67,7 +64,7 @@ void WorkerRx::work()
             if(checkMetadataError(metadata))
                 break;
 
-            emit dataReceived(data);
+            emit dataReceived(data, received);
         }
 
         delete data;

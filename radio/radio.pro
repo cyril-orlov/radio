@@ -14,17 +14,21 @@ INCLUDEPATH += ../qwt-6.1.0/src \
 DEPENDPATH += ../qwt-6.1.0/lib \
               ../fftw-3.3.4-dll32
 
-CONFIG(debug, debug|release) {
-    DEPENDPATH += ../uhd/lib
+UHDPATH = ../uhd/lib
+
+CONFIG(Debug, Debug|Release) {
+    UHDPATH = ../uhd/lib
+    LIBS += -L../uhd/lib -luhd\
 }
 
-CONFIG(release, debug|release) {
-    DEPENDPATH += ../uhd_release/lib
+CONFIG(Release, Debug|Release) {
+    UHDPATH = ../uhd_release/lib
+    LIBS += -L../uhd_release/lib -luhd\
 }
 
+DEPENDPATH += UHDPATH
 
-LIBS += -L../uhd/lib -luhd\
-        -L../fftw-3.3.4-dll32 -llibfftw3-3
+LIBS += -L../fftw-3.3.4-dll32 -llibfftw3-3
 
 QT       += core gui
 
