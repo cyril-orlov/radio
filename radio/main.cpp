@@ -12,6 +12,7 @@ void testPlot(MainWindow &w);
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    qRegisterMetaType<size_t>("size_t");
     MainWindow w;
     OptionsDialog d;
     QObject::connect(&w, &MainWindow::optionsClicked, &d, &OptionsDialog::exec);
@@ -26,7 +27,7 @@ int main(int argc, char *argv[])
     QObject::connect(&d, &OptionsDialog::optionsUpdated, &r, &Receiver::onOptionsUpdated);
     QObject::connect(&timer, &Timer::done, &r, &Receiver::onStarted);
 
-    FFTransformer fft((size_t)Options::getInstance()->getFrequency() / 2, &w);
+    FFTransformer fft((size_t)Options::getInstance()->getBand(), &w);
     QObject::connect(&r, &Receiver::dataReceived, &fft, &FFTransformer::onDataReceived);
     QObject::connect(&d, &OptionsDialog::optionsUpdated, &fft, &FFTransformer::init);
 

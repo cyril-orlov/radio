@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     QwtPlotCurve* curve = new QwtPlotCurve();
     curve->setPen(Qt::blue);
+    ui->qwtPlot->setAxisAutoScale(QwtPlot::Axis::yLeft, false);
     curve->attach(ui->qwtPlot);
 }
 
@@ -40,15 +41,15 @@ void MainWindow::onOptionsChanged()
     ui->qwtPlot->replot();
 }
 
-void MainWindow::onChartChanged(QVector<Complex> *data)
+void MainWindow::onChartChanged(QVector<double> &data)
 {
     QwtPlotCurve* curve = dynamic_cast<QwtPlotCurve*>(ui->qwtPlot->itemList()[0]);
     if(curve == nullptr)
         return;
 
     DataHelper* convertedData = new DataHelper(data);
-
     curve->setData(convertedData);
+    ui->qwtPlot->replot();
 }
 
 MainWindow::~MainWindow()

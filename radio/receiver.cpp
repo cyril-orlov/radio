@@ -54,10 +54,11 @@ void Receiver::configure()
     m_configured = true;
     m_device = uhd::usrp::multi_usrp::make(found[0]);
     m_device->set_rx_freq(freq);
-    m_device->set_rx_rate(band / 2);
+    m_device->set_rx_rate(band);
 
     m_thread = new QThread();
     WorkerRx::Config config;
+
     config.device = m_device;
     config.band = band;
     config.frequency = freq;
@@ -78,7 +79,7 @@ void Receiver::launch()
     m_thread->start();
 }
 
-void Receiver::onDataReceived(Samples buffer, size_t count)
+void Receiver::onDataReceived(Samples buffer, unsigned int count)
 {
     emit dataReceived(buffer, count);
 }

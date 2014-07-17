@@ -31,11 +31,13 @@ void FFTransformer::onDataReceived(Complex* data, size_t count)
 
     fftw_execute(m_plan);
 
-    QVector<Complex>* transformed = new QVector<Complex>;
+    QVector<double> transformed;
     for (auto i = 0; i < count; ++i)
     {
         fftw_complex* iter = (m_outBuffer + i);
-        transformed->append(Complex(*(iter)[0], *(iter)[1]));
+        double re = *(iter)[0];
+        double im = *(iter)[1];
+        transformed.append((re * re + im * im) / count);
     }
 
     ((MainWindow*)parent())->onChartChanged(transformed);

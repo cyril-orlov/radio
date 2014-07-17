@@ -38,7 +38,7 @@ public:
     explicit WorkerRx(const Config& config, QThread *thread = 0);
 
 signals:
-    void dataReceived(Samples data, size_t count);
+    void dataReceived(std::complex<double>* data, size_t count);
     void error(const QString & message);
 
 public slots:

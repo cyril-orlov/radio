@@ -7,6 +7,7 @@
 
 typedef std::complex<double> Complex;
 
+//todo: a worker, make sample queue, ttransform fixed count - 10000
 class FFTransformer : public QObject
 {
     Q_OBJECT

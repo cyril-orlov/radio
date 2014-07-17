@@ -3,13 +3,13 @@
 #include "uhd/device.hpp"
 #include "uhd/utils/thread_priority.hpp"
 #include "options.h"
-#include <QVector>
+#include <vector>
 
 WorkerRx::WorkerRx(const Config& config, QThread *thread) :
     Worker(thread),
     m_config(config)
 {
-    setCountdown(config.band / 2);
+    setCountdown(config.band);
 }
 
 void WorkerRx::setCountdown(size_t bufferSize)
@@ -26,7 +26,7 @@ bool WorkerRx::checkMetadataError(const uhd::rx_metadata_t& metadata)
     if(metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT)
     {
         emit error(QString("Превышено время ожидания устройства"));
-        return false;
+        return true;
     }
     else
         if(metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW)
@@ -34,10 +34,10 @@ bool WorkerRx::checkMetadataError(const uhd::rx_metadata_t& metadata)
             emit error (QString("Промежуточной пропускной способности недостаточно: требуется ") +
                         QString::number(m_config.device->get_rx_rate() * WorkerRx::SAMPLE_SIZE / (1 << 31)) +
                         QString("МБ/с"));
-            return false;
+            return true;
         }
 
-    return true;
+    return false;
 }
 
 void WorkerRx::work()
@@ -46,7 +46,7 @@ void WorkerRx::work()
     {
         uhd::set_thread_priority_safe();
 
-        size_t bufferSize = m_config.band / 2;
+        size_t bufferSize = m_config.band;
 
         Samples data = new Complex[bufferSize];
 
@@ -54,9 +54,9 @@ void WorkerRx::work()
         // emit data received every step
         while(getActive())
         {
-            QVector<void*> buffers = QVector<void*>();
+            std::vector<void*> buffers = std::vector<void*>();
             for(int i = 0; i != m_config.stream->get_num_channels(); i++)
-                buffers.push_back(&data);
+                buffers.push_back(data);
 
             size_t received = m_config.stream->recv(buffers, bufferSize, metadata, m_config.timeout, false);
             if(received == 0)
@@ -66,6 +66,9 @@ void WorkerRx::work()
 
             emit dataReceived(data, received);
         }
+
+        if(getActive())
+            setActive(false);
 
         delete data;
     }

@@ -9,8 +9,6 @@ namespace Ui {
 class MainWindow;
 }
 
-typedef std::complex<double> Complex;
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -29,7 +27,7 @@ public slots:
     void timerDone();
     void timerUpdate(int count);
     void onOptionsChanged();
-    void onChartChanged(QVector<Complex> * data);
+    void onChartChanged(QVector<double> &data);
 
 private:
     Ui::MainWindow *ui;
