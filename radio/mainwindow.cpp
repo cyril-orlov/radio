@@ -2,18 +2,14 @@
 #include "ui_mainwindow.h"
 #include "optionsdialog.h"
 #include "options.h"
-#include <qwt_plot_curve.h>
-#include "datahelper.hpp"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    QwtPlotCurve* curve = new QwtPlotCurve();
-    curve->setPen(Qt::blue);
-    ui->qwtPlot->setAxisAutoScale(QwtPlot::Axis::yLeft, false);
-    curve->attach(ui->qwtPlot);
+    qwtPlot = new CustomPlot(this);
+    ui->horizontalLayout_2->addWidget(qwtPlot);
 }
 
 void MainWindow::optionsClicked_internal()
@@ -37,19 +33,17 @@ void MainWindow::onOptionsChanged()
     int frequency = options->getFrequency();
     int band = options->getBand();
 
-    ui->qwtPlot->setAxisScale(QwtPlot::Axis::xBottom, frequency - band / 2, frequency + band / 2);
-    ui->qwtPlot->replot();
+    qwtPlot->setAxisScale(QwtPlot::Axis::xBottom, frequency - band / 2, frequency + band / 2);
 }
 
-void MainWindow::onChartChanged(QVector<double> &data)
+void MainWindow::onChartChanged(QVector<double> data)
 {
-    QwtPlotCurve* curve = dynamic_cast<QwtPlotCurve*>(ui->qwtPlot->itemList()[0]);
+    QwtPlotCurve* curve = dynamic_cast<QwtPlotCurve*>(qwtPlot->itemList()[0]);
     if(curve == nullptr)
         return;
 
-    DataHelper* convertedData = new DataHelper(data);
-    curve->setData(convertedData);
-    ui->qwtPlot->replot();
+    DataHelper* curveData = static_cast<DataHelper*>(curve->data());
+    curveData->setData(data);
 }
 
 MainWindow::~MainWindow()

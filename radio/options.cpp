@@ -8,13 +8,7 @@ Options* Options::getInstance()
     if(s_instance == nullptr)
     {
         s_instance = new Options();
-        if(!s_instance->load())
-        {
-            s_instance->m_band = 0;
-            s_instance->m_frequency = 0;
-            s_instance->m_timeLeft = 0;
-            s_instance->m_address = Address(192, 168, 10, 2);
-        }
+        s_instance->load();
     }
 
     return s_instance;
@@ -26,19 +20,46 @@ void Options::save(const char * filename)const
     settings.setValue("address", m_address.toString());
     settings.setValue("frequency", m_frequency);
     settings.setValue("band", m_band);
+    settings.setValue("fft_window", m_FFTWindow);
 }
 
-bool Options::load(const char * filename)
+// load from cfg or assign defaults
+void Options::load(const char * filename)
 {
-    if(!QFile::exists(filename))
-        return false;
-
     QSettings settings(filename, QSettings::IniFormat);
-    setAddress(settings.value("address").toString());
-    setFrequency(settings.value("frequency").toDouble());
-    setBand(settings.value("band").toDouble());
 
-    return true;
+    setTimeLeft(0);
+
+    QVariant setting = settings.value("address", QString(""));
+    if(setting.toString().length() != 0)
+        setAddress(setting.toString());
+    else
+        setAddress(Address(192, 168, 10, 2));
+
+    setting = settings.value("frequency", QString(""));
+    if(setting.toString().length() != 0)
+        setFrequency(setting.toDouble());
+    else
+        setFrequency(5e6);
+
+    setting = settings.value("band", QString(""));
+    if(setting.toString().length() != 0)
+        setBand(setting.toDouble());
+    else
+        setBand(2e5);
+
+    bool ok;
+    size_t fftWindow = settings.value("fft_window", -1).toInt(&ok);
+    if(ok && fftWindow != (size_t)-1)
+        setFFTWindow(fftWindow);
+    else
+        setFFTWindow(1 << 13);
 }
+
+void Options::create()
+{
+    getInstance();
+}
+
 
 Options* Options::s_instance = nullptr;

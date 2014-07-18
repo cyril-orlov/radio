@@ -1,51 +1,37 @@
 #include "fftransformer.h"
 #include "fftw3.h"
 
-FFTransformer::FFTransformer(size_t bufferSize, MainWindow *parent) :
-    QObject(parent),
-    m_bufferSize(bufferSize),
-    m_plan(nullptr)
+FFTransformer::FFTransformer(size_t bufferSize) :
+    m_data(QQueue<Complex>()),
+    m_thread(new QThread())
 {
-    init();
-}
-
-void FFTransformer::init()
-{
-    if(m_plan != nullptr)
-        fftw_destroy_plan(m_plan);
-
-    m_inBuffer = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * m_bufferSize);
-    m_outBuffer = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * m_bufferSize);
-    m_plan = fftw_plan_dft_1d(m_bufferSize, m_inBuffer, m_outBuffer, FFTW_FORWARD, FFTW_ESTIMATE);
+    m_worker = new WorkerFFT(&m_data, m_thread, bufferSize);
+    this->connect(m_worker, &WorkerFFT::digested, this, &FFTransformer::onDataProcessed);
+    m_thread->start();
 }
 
 void FFTransformer::onDataReceived(Complex* data, size_t count)
 {
-    if(count > m_bufferSize)
-    {
-        qDebug("data size is bigger than buffer size (FFTransformer)");
-        return;
-    }
-
-    memcpy(m_inBuffer, data, count * sizeof(Complex));
-
-    fftw_execute(m_plan);
-
-    QVector<double> transformed;
+    m_worker->mutex()->lock();
     for (auto i = 0; i < count; ++i)
-    {
-        fftw_complex* iter = (m_outBuffer + i);
-        double re = *(iter)[0];
-        double im = *(iter)[1];
-        transformed.append((re * re + im * im) / count);
-    }
+        m_data.enqueue(*(data + i));
+    m_worker->mutex()->unlock();
 
-    ((MainWindow*)parent())->onChartChanged(transformed);
+    delete data;
+}
+
+void FFTransformer::onDataProcessed(QVector<double> &data)
+{
+    emit dataProcessed(data);
 }
 
 FFTransformer::~FFTransformer()
 {
-    fftw_destroy_plan(m_plan);
-    fftw_free(m_inBuffer);
-    fftw_free(m_outBuffer);
+    if (m_worker)
+    {
+        m_worker->deactivate();
+        delete m_worker;
+    }
+    if (m_thread)
+        delete m_thread;
 }

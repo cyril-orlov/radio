@@ -13,7 +13,7 @@ class Receiver : public QObject
     Q_OBJECT
 public:
     explicit Receiver(QObject *parent = 0);
-    virtual ~Receiver(){}
+    virtual ~Receiver();
 
 
 private:

@@ -9,6 +9,7 @@ WorkerRx::WorkerRx(const Config& config, QThread *thread) :
     Worker(thread),
     m_config(config)
 {
+    setObjectName(QString("RX"));
     setCountdown(config.band);
 }
 
@@ -48,12 +49,12 @@ void WorkerRx::work()
 
         size_t bufferSize = m_config.band;
 
-        Samples data = new Complex[bufferSize];
-
         uhd::rx_metadata_t metadata;
         // emit data received every step
         while(getActive())
-        {
+        {           
+            Samples data = new Complex[bufferSize];
+
             std::vector<void*> buffers = std::vector<void*>();
             for(int i = 0; i != m_config.stream->get_num_channels(); i++)
                 buffers.push_back(data);
@@ -69,8 +70,6 @@ void WorkerRx::work()
 
         if(getActive())
             setActive(false);
-
-        delete data;
     }
     catch(uhd::exception & e)
     {

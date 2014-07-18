@@ -2,10 +2,12 @@
 #define FFTRANSFORMER_H
 
 #include <QObject>
+#include <QQueue>
+#include <QTimer>
+#include <QMutex>
 #include "mainwindow.h"
 #include "fftw3.h"
-
-typedef std::complex<double> Complex;
+#include "workerfft.h"
 
 //todo: a worker, make sample queue, ttransform fixed count - 10000
 class FFTransformer : public QObject
@@ -13,19 +15,20 @@ class FFTransformer : public QObject
     Q_OBJECT
 
 private:
-    fftw_complex *m_inBuffer, *m_outBuffer;
-    fftw_plan m_plan;
-    size_t m_bufferSize;
+    WorkerFFT* m_worker;
+    QQueue<Complex> m_data;
+    QThread *m_thread;
 
 public:
-    explicit FFTransformer(size_t bufferSize, MainWindow *parent = 0);
+    explicit FFTransformer(size_t bufferSize = 1 << 12);
     ~FFTransformer();
 
 signals:
+    void dataProcessed(QVector<double> data);
 
 public slots:
     void onDataReceived(Complex * data, size_t count);
-    void init();
+    void onDataProcessed(QVector<double> &data);
 
 };
 

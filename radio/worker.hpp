@@ -10,7 +10,7 @@ class Worker : public QObject
     Q_OBJECT
 
 private:
-    bool m_active;
+    volatile bool m_active;
     QThread * m_thread;
 
 protected:
@@ -19,6 +19,8 @@ protected:
 
     bool getActive()const  { return m_active; }
     void setActive(bool other) { m_active = other; }
+
+    virtual void work() = 0;
 
 public:
     Worker(QThread* thread):
@@ -31,13 +33,14 @@ public:
 
     virtual ~Worker() {}
 
-    virtual void work() = 0;
-
     void deactivate()
     {
         m_active = false;
+        m_thread->quit();
         m_thread->wait();
+        qDebug("Worker (%s) deactivated ", qPrintable(this->objectName()));
     }
+
 
 signals:
     void done();

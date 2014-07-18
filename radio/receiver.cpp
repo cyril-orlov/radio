@@ -98,3 +98,19 @@ void Receiver::onOptionsUpdated()
 {
     configure();
 }
+
+
+Receiver::~Receiver()
+{
+    if (m_worker)
+    {
+        m_worker->deactivate();
+        delete m_worker;
+        m_worker = nullptr;
+    }
+    if(m_thread)
+    {
+        delete m_thread;
+        m_thread = nullptr;
+    }
+}

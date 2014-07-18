@@ -54,6 +54,9 @@ class Options : public QObject
 {
     Q_OBJECT
 
+public:
+    static void create();
+
 private:
     static Options* s_instance;
     Options(){}
@@ -66,7 +69,7 @@ signals:
 public:
     static Options* getInstance();
     void save(const char * filename = "config.ini")const;
-    bool load(const char * filename = "config.ini");
+    void load(const char * filename = "config.ini");
 
 #pragma region props
 
@@ -129,6 +132,13 @@ public:
         FIRE_CHANGED(m_band)
         m_band = other;
     }
+
+
+private:
+    size_t m_FFTWindow;
+public:
+    size_t getFFTWindow()const  { return m_FFTWindow; }
+    void setFFTWindow(const size_t& other) { m_FFTWindow = other; }
 
 #pragma endregion
 

@@ -4,7 +4,9 @@
 WorkerTime::WorkerTime(QThread* thread):
     Worker(thread),
     m_time(0)
-{}
+{
+    setObjectName(QString("Timer"));
+}
 
 void WorkerTime::setTime(const int other)
 {
@@ -35,7 +37,4 @@ void WorkerTime::work()
 
         m_lastEffectiveTick += elapsed;
     }
-
-    qDebug("timer stopped due to deactivation.\n");
-    getThread()->exit(0);
 }

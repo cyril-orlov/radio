@@ -1,9 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "customplot.hpp"
 #include <QMainWindow>
 #include <QVector>
 #include <complex>
+
 
 namespace Ui {
 class MainWindow;
@@ -15,6 +17,7 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+    CustomPlot * qwtPlot;
     ~MainWindow();
 
 private slots:
@@ -27,7 +30,7 @@ public slots:
     void timerDone();
     void timerUpdate(int count);
     void onOptionsChanged();
-    void onChartChanged(QVector<double> &data);
+    void onChartChanged(QVector<double> data);
 
 private:
     Ui::MainWindow *ui;

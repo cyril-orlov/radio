@@ -47,7 +47,9 @@ SOURCES += main.cpp\
     receiver.cpp \
     workerrx.cpp \
     workertime.cpp \
-    fftransformer.cpp
+    fftransformer.cpp \
+    workerfft.cpp \
+    datahelper.cpp
 
 HEADERS  += mainwindow.h \
     options.h \
@@ -58,7 +60,10 @@ HEADERS  += mainwindow.h \
     workertime.h \
     worker.hpp \
     fftransformer.h \
-    datahelper.hpp
+    workerfft.h \
+    noisegen.hpp \
+    customplot.hpp \
+    datahelper.h
 
 FORMS    += mainwindow.ui \
     optionsDialog.ui

@@ -4,15 +4,22 @@
 #include "optionsdialog.h"
 #include "receiver.h"
 #include "fftransformer.h"
+#include "noisegen.hpp"
 
 #include <QApplication>
+#include <QTime>
+#include <QThread>
 
 void testPlot(MainWindow &w);
 
 int main(int argc, char *argv[])
 {
+    Options::create();
+
     QApplication a(argc, argv);
+    qRegisterMetaType<QVector<double>>("QVector<double>&");
     qRegisterMetaType<size_t>("size_t");
+
     MainWindow w;
     OptionsDialog d;
     QObject::connect(&w, &MainWindow::optionsClicked, &d, &OptionsDialog::exec);
@@ -23,32 +30,40 @@ int main(int argc, char *argv[])
     QObject::connect(&timer, &Timer::tick, &w, &MainWindow::timerUpdate);
     QObject::connect(&d, &OptionsDialog::accepted, &timer, &Timer::checkOptions);
 
-    Receiver r;
-    QObject::connect(&d, &OptionsDialog::optionsUpdated, &r, &Receiver::onOptionsUpdated);
-    QObject::connect(&timer, &Timer::done, &r, &Receiver::onStarted);
+    FFTransformer fft(Options::getInstance()->getFFTWindow());
+    QObject::connect(&fft, &FFTransformer::dataProcessed, &w, &MainWindow::onChartChanged);
 
-    FFTransformer fft((size_t)Options::getInstance()->getBand(), &w);
-    QObject::connect(&r, &Receiver::dataReceived, &fft, &FFTransformer::onDataReceived);
-    QObject::connect(&d, &OptionsDialog::optionsUpdated, &fft, &FFTransformer::init);
+    Receiver r;
+
+    NoiseGen ng;
+    QThread* ngThread = nullptr;
+
+    if(argc > 1 && QString(argv[1]).compare("-testrandom") == 0)
+    {
+        ngThread = new QThread();
+        ng.moveToThread(ngThread);
+        QObject::connect(ngThread, &QThread::started, &ng, &NoiseGen::onStart);
+        QObject::connect(&ng, &NoiseGen::received, &fft, &FFTransformer::onDataReceived);
+        ngThread->start();
+    }
+    else
+    {
+        QObject::connect(&d, &OptionsDialog::optionsUpdated, &r, &Receiver::onOptionsUpdated);
+        QObject::connect(&timer, &Timer::done, &r, &Receiver::onStarted);
+        QObject::connect(&r, &Receiver::dataReceived, &fft, &FFTransformer::onDataReceived);
+    }
 
     w.show();
 
-    testPlot(w);
+    int result = a.exec();
 
-    return a.exec();
-}
+    if(ngThread)
+    {
+        ng.deactivate();
+        ngThread->quit();
+        ngThread->wait();
+        delete ngThread;
+    }
 
-void testPlot(MainWindow& w)
-{
-    FFTransformer fft(8, &w);
-    Complex* testData = new Complex[8];
-    testData[0] = Complex(0, 1);
-    testData[1] = Complex(1, 3);
-    testData[2] = Complex(2, 1);
-    testData[3] = Complex(3, 3);
-    testData[4] = Complex(4, 1);
-    testData[5] = Complex(5, 3);
-    testData[6] = Complex(6, 1);
-    testData[7] = Complex(7, 3);
-    fft.onDataReceived(testData, 8);
+    return result;
 }
