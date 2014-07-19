@@ -15,13 +15,13 @@ class WorkerFFT : public Worker
     Q_OBJECT
 
 public:
-    WorkerFFT(QQueue<Complex>* queue, QThread* thread, size_t bufferSize = 1 << 13); // 8192
+    WorkerFFT(QQueue<Complex>* queue, QThread* thread, size_t bufferSize, size_t bufferOverlap);
     ~WorkerFFT();
 
 private:
     fftw_complex *m_inBuffer, *m_outBuffer;
     fftw_plan m_plan;
-    size_t m_bufferSize;
+    size_t m_bufferSize, m_bufferOverlap;
     QThread * m_thread;
     QMutex * m_accessMutex;
     QQueue<Complex>* m_data;

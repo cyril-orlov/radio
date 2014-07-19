@@ -22,7 +22,7 @@ private:
     bool m_active;
 
 public:
-    NoiseGen(int sleepTime = 1, int sleepPeriod = 5, long seed = 1, size_t bufferSize = 1 << 10)
+    NoiseGen(int sleepTime = 1, int sleepPeriod = 5, long seed = 1, size_t bufferSize = 1 << 9)
         : m_buffer(new Complex[bufferSize]),
           m_bufferSize(bufferSize),
           m_seed(seed),

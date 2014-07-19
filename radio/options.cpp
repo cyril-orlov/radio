@@ -19,8 +19,7 @@ void Options::save(const char * filename)const
     QSettings settings(filename, QSettings::IniFormat);
     settings.setValue("address", m_address.toString());
     settings.setValue("frequency", m_frequency);
-    settings.setValue("band", m_band);
-    settings.setValue("fft_window", m_FFTWindow);
+    settings.setValue("band", m_band);    
 }
 
 // load from cfg or assign defaults
@@ -54,6 +53,12 @@ void Options::load(const char * filename)
         setFFTWindow(fftWindow);
     else
         setFFTWindow(1 << 13);
+
+    size_t fftOverlap = settings.value("fft_overlap", -1).toInt(&ok);
+    if(ok && fftOverlap != (size_t)-1)
+        setFFTOverlap(fftOverlap);
+    else
+        setFFTOverlap(0);
 }
 
 void Options::create()

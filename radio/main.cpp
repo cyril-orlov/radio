@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
     QObject::connect(&timer, &Timer::tick, &w, &MainWindow::timerUpdate);
     QObject::connect(&d, &OptionsDialog::accepted, &timer, &Timer::checkOptions);
 
-    FFTransformer fft(Options::getInstance()->getFFTWindow());
+    FFTransformer fft;
     QObject::connect(&fft, &FFTransformer::dataProcessed, &w, &MainWindow::onChartChanged);
 
     Receiver r;
@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     NoiseGen ng;
     QThread* ngThread = nullptr;
 
-    if(argc > 1 && QString(argv[1]).compare("-testrandom") == 0)
+    if(argc > 1 && QString(argv[1]).compare("-random") == 0)
     {
         ngThread = new QThread();
         ng.moveToThread(ngThread);

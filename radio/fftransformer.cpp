@@ -1,11 +1,13 @@
 #include "fftransformer.h"
 #include "fftw3.h"
 
-FFTransformer::FFTransformer(size_t bufferSize) :
+FFTransformer::FFTransformer() :
     m_data(QQueue<Complex>()),
     m_thread(new QThread())
 {
-    m_worker = new WorkerFFT(&m_data, m_thread, bufferSize);
+    size_t bufferSize = Options::getInstance()->getFFTWindow();
+    size_t bufferOverlap = Options::getInstance()->getFFTOverlap();
+    m_worker = new WorkerFFT(&m_data, m_thread, bufferSize, bufferOverlap);
     this->connect(m_worker, &WorkerFFT::digested, this, &FFTransformer::onDataProcessed);
     m_thread->start();
 }

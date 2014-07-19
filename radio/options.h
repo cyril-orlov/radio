@@ -140,6 +140,13 @@ public:
     size_t getFFTWindow()const  { return m_FFTWindow; }
     void setFFTWindow(const size_t& other) { m_FFTWindow = other; }
 
+private:
+    int m_FFTOverlap;
+public:
+    int getFFTOverlap()const  { return m_FFTOverlap; }
+    void setFFTOverlap(const int& other) { m_FFTOverlap = other; }
+
+
 #pragma endregion
 
 };

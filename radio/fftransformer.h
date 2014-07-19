@@ -20,7 +20,7 @@ private:
     QThread *m_thread;
 
 public:
-    explicit FFTransformer(size_t bufferSize = 1 << 12);
+    explicit FFTransformer();
     ~FFTransformer();
 
 signals:
