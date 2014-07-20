@@ -25,6 +25,7 @@ void FFTransformer::onDataReceived(Complex* data, size_t count)
 void FFTransformer::onDataProcessed(QVector<double> &data)
 {
     emit dataProcessed(data);
+    qDebug("data emitted");
 }
 
 FFTransformer::~FFTransformer()

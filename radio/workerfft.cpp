@@ -44,7 +44,7 @@ void WorkerFFT::work()
         if(m_data->length() < m_bufferSize)
         {
             m_accessMutex->unlock();
-            getThread()->msleep(100);
+            getThread()->msleep(10);
             continue;
         }
 
