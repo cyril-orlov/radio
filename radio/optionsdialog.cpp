@@ -16,30 +16,42 @@ void showWarning(QWidget * parent, const QString &title, const QString &text);
 
 void OptionsDialog::on_OptionsDialog_accepted()
 {
-    int timeLeft = ui->timeEdit->value();
-    int band = ui->bandEdit->value();
-    double frequency = ui->frequencyEdit->value();
-    QString address = ui->addressEdit->text();
+    double actualBand = ui->actualBandEdit->value();
+    double startFrequency = ui->frequencyEdit->value();
+    double endFrequency = ui->endFrequencyEdit->value();
+    double extraTicks = ui->extraTicksBox->value();
+    double signalSpeed = ui->signalSpeedBox->value();
 
-    Options* options = Options::getInstance();
-    options->setTimeLeft(timeLeft);
-    options->setBand(band * 1000);
-    options->setFrequency(frequency * 1e6);
-    if(!options->setAddress(address))
-        showWarning(this, QString("Ошибка"), QString("Некорректный адрес устройства"));
+    auto options = Options::getInstance();
+
+    options->setActualBand(normalizeActualBand(actualBand * 1e3, signalSpeed * 1e3));
+    options->setStartFrequency(startFrequency * 1e6);
+    options->setEndFrequency(endFrequency * 1e6);
+    options->setExtraTicks((size_t)(extraTicks * 1e3));
+    options->setSignalSpeed(signalSpeed * 1e3);
 
     options->save();
+}
 
-    emit optionsUpdated();
+double OptionsDialog::normalizeActualBand(double value, double signalSpeed)
+{
+    auto band = Options::getInstance()->getBand();
+    size_t window = band * value / signalSpeed;
+    size_t i = 2;
+    while ((i *= 2) < window) ;
+    window = i;
+    double newActualBand = i * signalSpeed / band;
+    return newActualBand;
 }
 
 int OptionsDialog::exec()
 {
     Options* options = Options::getInstance();
-    ui->timeEdit->setValue(options->getTimeLeft());
-    ui->bandEdit->setValue(options->getBand() / 1000);
-    ui->frequencyEdit->setValue(options->getFrequency() / 1e6);
-    ui->addressEdit->setText(options->getAddress().toString());
+    ui->actualBandEdit->setValue(options->getActualBand() / 1e3);
+    ui->frequencyEdit->setValue(options->getStartFrequency() / 1e6);
+    ui->endFrequencyEdit->setValue(options->getEndFrequency() / 1e6);
+    ui->extraTicksBox->setValue(options->getExtraTicks() / 1e3);
+    ui->signalSpeedBox->setValue(options->getSignalSpeed() / 1e3);
     return QDialog::exec();
 }
 
@@ -51,6 +63,7 @@ OptionsDialog::~OptionsDialog()
 void showWarning(QWidget * parent, const QString &title, const QString &text)
 {
     QMessageBox box(parent);
+    box.setModal(true);
     box.setIcon(QMessageBox::Icon::Warning);
     box.setWindowTitle(title);
     box.setText(text);

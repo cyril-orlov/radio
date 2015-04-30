@@ -2,6 +2,8 @@
 #include "ui_mainwindow.h"
 #include "optionsdialog.h"
 #include "options.h"
+#include <QFileDialog>
+#include <QStringListModel>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -17,33 +19,35 @@ void MainWindow::optionsClicked_internal()
     emit optionsClicked();
 }
 
-void MainWindow::timerDone()
+void MainWindow::stopClicked_internal()
 {
-    ui->statusBar->showMessage(QString("Готово"));
+    emit stopClicked();
 }
 
-void MainWindow::timerUpdate(int count)
-{
-    ui->statusBar->showMessage(QString::number(count));
+void MainWindow::startClicked_internal()
+{    
+    ListenDialog ld;
+    ld.setModal(true);
+    if(ld.exec())
+        emit startClicked(ld.getTime());
 }
 
-void MainWindow::onOptionsChanged()
+void MainWindow::listenChanged(bool value)
 {
-    Options* options = Options::getInstance();
-    int frequency = options->getFrequency();
-    int band = options->getBand();
-
-    qwtPlot->setAxisScale(QwtPlot::Axis::xBottom, frequency - band / 2, frequency + band / 2);
+    ui->actionStart->setEnabled(!value);
+    ui->actionStop->setEnabled(value);
+    ui->actionChange->setEnabled(!value);
 }
 
-void MainWindow::onChartChanged(QVector<double> data)
+void MainWindow::onChartChanged(double* data, int column, size_t length)
 {
-    QwtPlotCurve* curve = dynamic_cast<QwtPlotCurve*>(qwtPlot->itemList()[0]);
+    QwtPlotSpectrogram* curve = dynamic_cast<QwtPlotSpectrogram*>(qwtPlot->itemList()[0]);
     if(curve == nullptr)
         return;
 
     DataHelper* curveData = static_cast<DataHelper*>(curve->data());
-    curveData->setData(data);
+    curveData->setData(data, column, length);
+    qwtPlot->replot();
 }
 
 MainWindow::~MainWindow()

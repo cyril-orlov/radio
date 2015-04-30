@@ -1,6 +1,7 @@
 #ifndef OPTIONSDIALOG_H
 #define OPTIONSDIALOG_H
 
+#include "stdafx.h"
 #include <QDialog>
 
 namespace Ui {
@@ -15,9 +16,6 @@ public:
     OptionsDialog();
     ~OptionsDialog();
 
-signals:
-    void optionsUpdated();
-
 public slots:
     int exec() override;
 
@@ -26,6 +24,8 @@ private slots:
 
 private:
     Ui::OptionsDialog *ui;
+
+    double normalizeActualBand(double value, double signalSpeed);
 };
 
 #endif // OPTIONSDIALOG_H

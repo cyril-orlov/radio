@@ -1,40 +1,90 @@
 #include "fftransformer.h"
 #include "fftw3.h"
 
-FFTransformer::FFTransformer() :
-    m_data(QQueue<Complex>()),
-    m_thread(new QThread())
+FFTransformer::FFTransformer(QObject *parent, char workersCount):
+    QObject(parent),
+    m_workersCount(workersCount),
+    m_complexSub(nullptr)
 {
-    size_t bufferSize = Options::getInstance()->getFFTWindow();
-    size_t bufferOverlap = Options::getInstance()->getFFTOverlap();
-    m_worker = new WorkerFFT(&m_data, m_thread, bufferSize, bufferOverlap);
-    this->connect(m_worker, &WorkerFFT::digested, this, &FFTransformer::onDataProcessed);
-    m_thread->start();
+#ifdef DUMP_RAW
+    return;
+#endif
+    if(!fftw_init_threads())
+        throw QString("unable to init fftw threading!");
+
+    auto o = Options::getInstance();
+
+    m_bufferSize = o->getBand() * o->getActualBand() / o->getSignalSpeed();
+    size_t i = 2;
+    while ((i *= 2) < m_bufferSize) ;
+    m_bufferSize = i;
+
+    size_t bufferOverlap = (size_t)(o->getBand() / o->getActualBand());
+
+    if(workersCount <= 0)
+        workersCount = 1;
+    m_threads = new QThread*[workersCount];
+    m_workers = new WorkerFFT*[workersCount];
+
+    for (int i = 0; i < workersCount; ++i)
+    {
+        m_threads[i] = new QThread(this);
+        m_workers[i] = new WorkerFFT(m_threads[i], m_bufferSize, bufferOverlap);
+        connect(m_workers[i], &WorkerFFT::digested, this, &FFTransformer::dataProcessed);
+    }
 }
 
-void FFTransformer::onDataReceived(Complex* data, size_t count)
+void FFTransformer::setDataSource(FFTJobManager* dataSource)
 {
-    m_worker->mutex()->lock();
-    for (auto i = 0; i < count; ++i)
-        m_data.enqueue(*(data + i));
-    m_worker->mutex()->unlock();
-
-    delete data;
+#ifdef DUMP_RAW
+    return;
+#endif
+    for (int i = 0; i < m_workersCount; ++i)
+        m_workers[i]->setDataSource(dataSource);
 }
 
-void FFTransformer::onDataProcessed(QVector<double> &data)
+void FFTransformer::start()
 {
-    emit dataProcessed(data);
-    qDebug("data emitted");
+#ifdef DUMP_RAW
+    return;
+#endif
+    m_complexSub = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * m_bufferSize);
+    fillComplexSub();
+    for (int i = 0; i < m_workersCount; ++i)
+    {
+        m_workers[i]->init(m_complexSub);
+        m_threads[i]->start();
+    }
+}
+
+void FFTransformer::fillComplexSub()
+{
+#ifdef DUMP_RAW
+    return;
+#endif
+    double speed = Options::getInstance()->getSignalSpeed();
+    double rxRate = Options::getInstance()->getBand();
+    for(size_t i = 0; i < m_bufferSize; i++)
+    {
+        double t = (i / (double)m_bufferSize) / rxRate;
+        t *= t;
+
+        auto iter = *(m_complexSub + i);
+        iter[0] = cos(M_PI * t * speed);
+        iter[1] = -sin(M_PI * t * speed);
+        //todo fill
+    }
 }
 
 FFTransformer::~FFTransformer()
 {
-    if (m_worker)
+#ifdef DUMP_RING
+    return;
+#endif
+    if(m_complexSub != nullptr)
     {
-        m_worker->deactivate();
-        delete m_worker;
+        fftw_free(m_complexSub);
+        for (int i = 0; i < m_workersCount; ++i)
+            delete m_workers[i];
     }
-    if (m_thread)
-        delete m_thread;
 }

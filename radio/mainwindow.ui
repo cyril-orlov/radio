@@ -44,7 +44,15 @@
     </property>
     <addaction name="actionChange"/>
    </widget>
+   <widget class="QMenu" name="analysis">
+    <property name="title">
+     <string>Анализ</string>
+    </property>
+    <addaction name="actionStart"/>
+    <addaction name="actionStop"/>
+   </widget>
    <addaction name="options"/>
+   <addaction name="analysis"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -60,7 +68,31 @@
     <string>Изменить</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+O</string>
+    <string>Ctrl+Return</string>
+   </property>
+  </action>
+  <action name="actionStart">
+   <property name="text">
+    <string>Старт...</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+L</string>
+   </property>
+  </action>
+  <action name="loadScheduleAction">
+   <property name="text">
+    <string>Загрузить</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Ctrl+O</string>
+   </property>
+  </action>
+  <action name="actionStop">
+   <property name="text">
+    <string>Стоп</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+B</string>
    </property>
   </action>
  </widget>
@@ -83,8 +115,42 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actionStart</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>startClicked_internal()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>402</x>
+     <y>269</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionStop</sender>
+   <signal>triggered()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>stopClicked_internal()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>402</x>
+     <y>269</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>optionsClicked_internal()</slot>
+  <slot>startClicked_internal()</slot>
+  <slot>stopClicked_internal()</slot>
  </slots>
 </ui>

@@ -1,9 +1,11 @@
 #ifndef WORKER_H
 #define WORKER_H
 
+#include "stdafx.h"
 #include <QObject>
 #include <QThread>
 #include <QMutex>
+#include <QWeakPointer>
 
 class Worker : public QObject
 {
@@ -11,33 +13,39 @@ class Worker : public QObject
 
 private:
     volatile bool m_active;
-    QThread * m_thread;
+    QWeakPointer<QThread> m_thread;
 
 protected:
-    QThread* getThread()const  { return m_thread; }
-    void setThread(QThread* other) { m_thread = other; }
-
     bool getActive()const  { return m_active; }
     void setActive(bool other) { m_active = other; }
+    QThread* getThread()const { return m_thread.value; }
 
     virtual void work() = 0;
+    Worker(){}
 
 public:
+
     Worker(QThread* thread):
-        m_thread(thread),
         m_active(true)
     {
+        m_thread.assign(thread);
         QObject::connect(thread, &QThread::started, this, &Worker::work);
         moveToThread(thread);
     }
 
-    virtual ~Worker() {}
+    virtual ~Worker()
+    {
+        deactivate();
+        afterDestroy();
+    }
+
+    virtual void afterDestroy(){}
 
     void deactivate()
     {
         m_active = false;
-        m_thread->quit();
-        m_thread->wait();
+        m_thread.value->quit();
+        m_thread.value->wait();
         qDebug("Worker (%s) deactivated ", qPrintable(this->objectName()));
     }
 

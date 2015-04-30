@@ -1,35 +1,38 @@
 #ifndef DATAHELPER_H
 #define DATAHELPER_H
-#include "qwt_series_data.h"
+
+#include "stdafx.h"
+#include "qwt_raster_data.h"
 #include <complex>
 #include "options.h"
 
 typedef std::complex<double> Complex;
 
-class DataHelper : public QwtSeriesData<QPointF>
+struct DataColumn
+{
+    double* data;
+    size_t length;
+};
+
+class DataHelper : public QwtRasterData
 {
 private:
-    QVector<double> m_data;
-    static double s_band;
-    static double s_freq;
-
+    QMap<int, DataColumn> m_data;
+    static double s_freq, s_endFreq;
     QMutex *m_accessLock;
 
 public:
     DataHelper();
 
-    DataHelper(QVector<double> &data);
+    DataHelper(double* data, int column, size_t length);
 
     ~DataHelper();
+
     QMutex * mutex();
-    void setData(QVector<double> data);
 
-    virtual size_t size() const;
+    void setData(double* data, int column, size_t length);
 
-    virtual QPointF sample(size_t i) const;
-
-    virtual QRectF boundingRect() const;
-
+    virtual double value(double x, double y) const;
 };
 
 

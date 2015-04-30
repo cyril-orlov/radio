@@ -1,13 +1,14 @@
 #ifndef OPTIONS_H
 #define OPTIONS_H
+
+
+#include "stdafx.h"
 #include <string>
 #include <sstream>
 #include <QStringList>
+#include <boost/program_options.hpp>
 
-#define FIRE_CHANGED(option) if(option != other) \
-{\
-    emit optionsChanged();\
-}
+namespace po = boost::program_options;
 
 #include <QObject>
 #include <string>
@@ -27,8 +28,6 @@ struct Address
         : A(a), B(b), C(c), D(d){}
 
     byte A, B, C, D;
-    //short AB, CD;
-   // byte data[4];
 
     bool operator != (const Address& other)const
     {
@@ -48,12 +47,8 @@ struct Address
 
 typedef Address* pAddress;
 
-
-
 class Options : public QObject
 {
-    Q_OBJECT
-
 public:
     static void create();
 
@@ -63,26 +58,26 @@ private:
     Options(const Options& other){}
     Options operator = (const Options & other){}
 
-signals:
-    void optionsChanged();
+    po::options_description m_settings;
 
 public:
     static Options* getInstance();
     void save(const char * filename = "config.ini")const;
     void load(const char * filename = "config.ini");
 
+    operator po::options_description() { return m_settings; }
+
 #pragma region props
+
+public:
+    int getFPS() const { return 60; }
 
 private:
     Address m_address;
 public:
     Address getAddress()const { return m_address; }
 
-    void setAddress(const Address& other)
-    {
-        FIRE_CHANGED(m_address)
-        m_address = other;
-    }
+    void setAddress(const Address& other) { m_address = other; }
 
     bool setAddress(const QString& src)
     {
@@ -104,53 +99,57 @@ public:
     }
 
 private:
-    int m_timeLeft;
+    double m_startFrequency;
 public:
-    int getTimeLeft()const  { return m_timeLeft; }
-    void setTimeLeft(int other)
-    {
-        FIRE_CHANGED(m_timeLeft)
-        m_timeLeft = other;
-    }
+    double getStartFrequency()const { return m_startFrequency; }
+    void setStartFrequency(double other) { m_startFrequency = other; }
 
 private:
-    double m_frequency;
+    double m_endFrequency;
 public:
-    double getFrequency()const  { return m_frequency; }
-    void setFrequency(double other)
-    {
-        FIRE_CHANGED(m_frequency)
-        m_frequency = other;
-    }
+    double getEndFrequency()const  { return m_endFrequency; }
+    void setEndFrequency(double other){ m_endFrequency = other; }
+
+private:
+    double m_signalSpeed;
+public:
+    double getSignalSpeed()const  { return m_signalSpeed; }
+    void setSignalSpeed(const double& other) { m_signalSpeed = other; }
+
+private:
+    int m_extraTicks;
+public:
+    int getExtraTicks()const  { return m_extraTicks; }
+    void setExtraTicks(const int& other) { m_extraTicks = other; }
 
 private:
     double m_band;
 public:
     double getBand()const  { return m_band; }
-    void setBand(const double& other)
-    {
-        FIRE_CHANGED(m_band)
-        m_band = other;
-    }
-
+    void setBand(const double& other){ m_band = other; }
 
 private:
-    size_t m_FFTWindow;
+    double m_actualBand;
 public:
-    size_t getFFTWindow()const  { return m_FFTWindow; }
-    void setFFTWindow(const size_t& other) { m_FFTWindow = other; }
+    double getActualBand()const  { return m_actualBand; }
+    void setActualBand(const double& other) { m_actualBand = other; }
 
 private:
-    int m_FFTOverlap;
+    size_t m_RXBufferSize;
 public:
-    int getFFTOverlap()const  { return m_FFTOverlap; }
-    void setFFTOverlap(const int& other) { m_FFTOverlap = other; }
+    size_t getRXBufferSize()const  { return m_RXBufferSize; }
+    void setRXBufferSize(const size_t& other) { m_RXBufferSize = other; }
+
+private:
+    char m_fftThreads;
+public:
+    char getFFTThreads()const  { return m_fftThreads; }
+    void setFFTThreads(const char& other) { m_fftThreads = other; }
 
 
 #pragma endregion
 
 };
 
-#undef FIRE_CHANGED
 
 #endif // OPTIONS_H

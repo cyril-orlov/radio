@@ -2,18 +2,24 @@
 
 DataHelper::DataHelper()
     : m_accessLock(new QMutex())
-{}
+{
+    s_freq = Options::getInstance()->getStartFrequency();
+    s_endFreq = Options::getInstance()->getEndFrequency();
+    setInterval(Qt::Axis::YAxis, QwtInterval(0, 1));
+}
 
-DataHelper::DataHelper(QVector<double> &data)
+DataHelper::DataHelper(double* data, int column, size_t length)
 {
     DataHelper();
-    if(data.size() == 0)
+    if(length == 0)
         return;
-    setData(data);
+    setData(data, column, length);
 }
 
 DataHelper::~DataHelper()
 {
+    foreach (int i, m_data.keys())
+        delete[] m_data[i].data;
     delete m_accessLock;
 }
 
@@ -22,45 +28,46 @@ QMutex * DataHelper::mutex()
     return m_accessLock;
 }
 
-void DataHelper::setData(QVector<double> data)
+void DataHelper::setData(double* data, int column, size_t length)
 {
     m_accessLock->lock();
-    m_data.clear();
-    static double top = 0;
+    m_data[column].data = new double[length];
+    m_data[column].length = length;
+    memcpy(m_data[column].data, data, sizeof(double) * length);
+    static double zTop = 0;
+    static size_t rightmostColumn = 0;
 
-    for(auto i = 0; i != data.size(); i++)
+    if(column > rightmostColumn)
     {
-        m_data.append(data[i]);
-        if(data.at(i) > top)
-            top = data.at(i);
+        rightmostColumn = column;
+        setInterval(Qt::Axis::XAxis, QwtInterval(0, column));
     }
 
-    s_band = Options::getInstance()->getBand();
-    s_freq = Options::getInstance()->getFrequency();
+    for(auto i = 0; i != length; i++)
+    {
+        if(data[i] > zTop)
+            zTop = data[i];
+    }
+    setInterval(Qt::Axis::ZAxis, QwtInterval(0, zTop));
 
-    d_boundingRect = QRectF(s_freq - s_band / 2, top, s_band, top);
     m_accessLock->unlock();
+    delete[] data;
 }
 
-size_t DataHelper::size()const
+double DataHelper::value(double x, double y)const
 {
-    return m_data.size();
+ /*   const double c = 0.842;
+
+    const double v1 = x * x + (y-c) * (y+c);
+    const double v2 = x * (y+c) + x * (y+c);
+
+    return 1.0 / (v1 * v1 + v2 * v2);*/
+    if(!m_data.contains((size_t)x))
+        return 0;
+    auto col = m_data[(size_t)x];
+    size_t i = (size_t)(y * col.length);
+    return col.data[i];
 }
 
-QPointF DataHelper::sample(size_t i)const
-{
-    if(m_data.size() == 0)
-        return QPointF();
 
-    double y = m_data[i];
-    double step = s_band / size();
-    double x = s_freq - s_band / 2 + step * i;
-    return QPointF(x, y);
-}
-
-QRectF DataHelper::boundingRect()const
-{
-    return QRectF(d_boundingRect);
-}
-
-double DataHelper::s_band = -1, DataHelper::s_freq = -1;
+double DataHelper::s_freq = -1, DataHelper::s_endFreq = -1;

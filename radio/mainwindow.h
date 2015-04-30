@@ -1,10 +1,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "stdafx.h"
 #include "customplot.hpp"
 #include <QMainWindow>
 #include <QVector>
 #include <complex>
+#include <QTime>
+#include "listendialog.h"
+#include "scheduler.h"
 
 
 namespace Ui {
@@ -22,15 +26,16 @@ public:
 
 private slots:
     void optionsClicked_internal();
-
+    void startClicked_internal();
+    void stopClicked_internal();
 signals:
     void optionsClicked();
+    void startClicked(const QTime& when);
+    void stopClicked();
 
 public slots:
-    void timerDone();
-    void timerUpdate(int count);
-    void onOptionsChanged();
-    void onChartChanged(QVector<double> data);
+    void onChartChanged(double* data, int column, size_t length);   
+    void listenChanged(bool value);
 
 private:
     Ui::MainWindow *ui;

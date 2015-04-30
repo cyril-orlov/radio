@@ -1,7 +1,9 @@
 #ifndef RECEIVER_H
 #define RECEIVER_H
 
+#include "stdafx.h"
 #include <QObject>
+#include <QDateTime>
 #include "options.h"
 #include "workerrx.h"
 #include "uhd/device.hpp"
@@ -12,33 +14,20 @@ class Receiver : public QObject
 {
     Q_OBJECT
 public:
-    explicit Receiver(QObject *parent = 0);
+    explicit Receiver(QObject *parent, QTime when, FFTJobManager *dataSource);
     virtual ~Receiver();
 
-
 private:
-
     WorkerRx* m_worker;
     QThread* m_thread;
-    Address m_lastAddress;
     uhd::usrp::multi_usrp::sptr m_device;
 
-    bool m_configured;
-
-    long m_frequency;
-    uhd::rx_streamer::sptr m_stream;
-
-    void configure();
-    void launch();
-
-signals:
-    void dataReceived(Samples buffer, size_t count);
+    WorkerRx::Config configure(const QTime &when, FFTJobManager *dataSource);
 
 public slots:
-    void onDataReceived(Samples buffer, size_t count);
-    void onOptionsUpdated();
-    void onStarted();
-    void onError(const QString& message);    
+    void onError(const QString& message);
+signals:
+    void done();
 };
 
 #endif // RECEIVER_H

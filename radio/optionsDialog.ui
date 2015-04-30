@@ -9,133 +9,138 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>130</height>
+    <width>260</width>
+    <height>240</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>320</width>
+    <height>240</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Опции</string>
   </property>
   <property name="windowOpacity">
-   <double>0.800000000000000</double>
+   <double>1.000000000000000</double>
   </property>
   <property name="modal">
    <bool>false</bool>
   </property>
-  <widget class="QDialogButtonBox" name="buttonBox">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>90</y>
-     <width>371</width>
-     <height>32</height>
-    </rect>
-   </property>
-   <property name="orientation">
-    <enum>Qt::Horizontal</enum>
-   </property>
-   <property name="standardButtons">
-    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-   </property>
-  </widget>
-  <widget class="QWidget" name="verticalLayoutWidget">
-   <property name="geometry">
-    <rect>
-     <x>11</x>
-     <y>10</y>
-     <width>168</width>
-     <height>74</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <property name="sizeConstraint">
-     <enum>QLayout::SetMaximumSize</enum>
-    </property>
-    <property name="rightMargin">
-     <number>0</number>
-    </property>
-    <item>
-     <widget class="QSpinBox" name="timeEdit">
-      <property name="suffix">
-       <string> сек.</string>
-      </property>
-      <property name="prefix">
-       <string>Время: </string>
-      </property>
-      <property name="maximum">
-       <number>10000000</number>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QDoubleSpinBox" name="frequencyEdit">
-      <property name="prefix">
-       <string>Частота: </string>
-      </property>
-      <property name="suffix">
-       <string> МГц</string>
-      </property>
-      <property name="minimum">
-       <double>0.000000000000000</double>
-      </property>
-      <property name="maximum">
-       <double>10000.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <widget class="QDoubleSpinBox" name="bandEdit">
-      <property name="prefix">
-       <string>Полоса </string>
-      </property>
-      <property name="suffix">
-       <string> КГц</string>
-      </property>
-      <property name="maximum">
-       <double>10000000.000000000000000</double>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
-  <widget class="QWidget" name="verticalLayoutWidget_2">
-   <property name="geometry">
-    <rect>
-     <x>210</x>
-     <y>10</y>
-     <width>135</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <layout class="QVBoxLayout" name="verticalLayout_2">
-    <item>
-     <widget class="QLineEdit" name="addressEdit">
-      <property name="placeholderText">
-       <string>IP-адрес</string>
-      </property>
-     </widget>
-    </item>
-   </layout>
-  </widget>
+  <layout class="QVBoxLayout" name="verticalLayout_3">
+   <item>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>Диапазон</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QDoubleSpinBox" name="frequencyEdit">
+        <property name="prefix">
+         <string>От </string>
+        </property>
+        <property name="suffix">
+         <string> МГц</string>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="endFrequencyEdit">
+        <property name="prefix">
+         <string>До </string>
+        </property>
+        <property name="suffix">
+         <string> МГц</string>
+        </property>
+        <property name="minimum">
+         <double>0.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDoubleSpinBox" name="extraTicksBox">
+     <property name="prefix">
+      <string>Задержка </string>
+     </property>
+     <property name="suffix">
+      <string> сек</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDoubleSpinBox" name="actualBandEdit">
+     <property name="correctionMode">
+      <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+     </property>
+     <property name="prefix">
+      <string>Полоса </string>
+     </property>
+     <property name="suffix">
+      <string> КГц</string>
+     </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="maximum">
+      <double>10000000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDoubleSpinBox" name="signalSpeedBox">
+     <property name="prefix">
+      <string>Скорость </string>
+     </property>
+     <property name="suffix">
+      <string> КГц/сек</string>
+     </property>
+     <property name="minimum">
+      <double>1.000000000000000</double>
+     </property>
+     <property name="maximum">
+      <double>10000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>OptionsDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
@@ -143,12 +148,28 @@
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>250</x>
+     <y>224</y>
     </hint>
     <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
+     <x>259</x>
+     <y>121</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>OptionsDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>247</x>
+     <y>224</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>121</y>
     </hint>
    </hints>
   </connection>

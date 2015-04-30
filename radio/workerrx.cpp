@@ -5,22 +5,21 @@
 #include "options.h"
 #include <vector>
 
-WorkerRx::WorkerRx(const Config& config, QThread *thread) :
+WorkerRx::WorkerRx(QThread* thread, const Config& cfg) :
     Worker(thread),
-    m_config(config)
+    m_config(cfg)
 {
     setObjectName(QString("RX"));
-    setCountdown(config.band);
+    if(cfg.endFrequency < cfg.startFrequency)
+        throw QString("end frequency is less than start frequency");
+    if(cfg.actualBand <= 0)
+        throw QString("band must be > 0");
+    if(cfg.signalSpeed <= 0)
+        throw QString("signal speed must be > 0");
+    if(cfg.stream == nullptr)
+        throw QString("no stream to read from");
 }
 
-void WorkerRx::setCountdown(size_t bufferSize)
-{
-    uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_START_CONTINUOUS);
-    cmd.num_samps = bufferSize;
-    cmd.stream_now = false;
-    cmd.time_spec = m_config.time;
-    m_config.stream->issue_stream_cmd(cmd);
-}
 
 bool WorkerRx::checkMetadataError(const uhd::rx_metadata_t& metadata)
 {
@@ -37,47 +36,129 @@ bool WorkerRx::checkMetadataError(const uhd::rx_metadata_t& metadata)
                         QString("МБ/с"));
             return true;
         }
+        else
+            if(metadata.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE)
+            {
+                emit error (QString("Ошибка") + QString::number(metadata.error_code));
+                return true;
+            }
 
     return false;
 }
 
-void WorkerRx::work()
+void WorkerRx::timeFix()
 {
-    try
-    {
-        uhd::set_thread_priority_safe();
+    int msec = QTime::currentTime().msec();
 
-        size_t bufferSize = m_config.band;
+    if(msec > 500)
+        QThread::msleep(1000 - msec);
 
-        uhd::rx_metadata_t metadata;
-        // emit data received every step
-        while(getActive())
-        {           
-            Samples data = new Complex[bufferSize];
+    m_config.device->set_time_next_pps(
+                uhd::time_spec_t::from_ticks(
+                    (QTime::currentTime().msecsSinceStartOfDay() / 1000) * 1000 + 1000, 1000
+                )
+            );
 
-            std::vector<void*> buffers = std::vector<void*>();
-            for(int i = 0; i != m_config.stream->get_num_channels(); i++)
-                buffers.push_back(data);
-
-            size_t received = m_config.stream->recv(buffers, bufferSize, metadata, m_config.timeout, false);
-            if(received == 0)
-                break;
-            if(checkMetadataError(metadata))
-                break;
-
-            emit dataReceived(data, received);
-        }
-
-        if(getActive())
-            setActive(false);
-    }
-    catch(uhd::exception & e)
-    {
-        qDebug(e.what());
-    }
-
-    m_config.stream->issue_stream_cmd(uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS);
-
-    getThread()->exit(0);
+    QThread::msleep(1100);
+    qDebug() << "3 " << QTime::currentTime().toString("hh:mm:ss:zzz");
+    auto t = QTime::fromMSecsSinceStartOfDay(m_config.device->get_time_now().to_ticks(1000));
+    qDebug() << "3U" << t.toString(QString("hh:mm:ss:zzz"));
 }
 
+uhd::time_spec_t WorkerRx::doFirstRx()
+{  
+    timeFix();
+
+    m_config.device->set_rx_freq(m_config.startFrequency);
+    uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
+    cmd.num_samps = m_config.samples;
+    cmd.stream_now = false;
+    cmd.time_spec = uhd::time_spec_t::from_ticks(m_config.when.msecsSinceStartOfDay() - m_config.extraTicks, 1000);
+    m_config.stream->issue_stream_cmd(cmd);
+
+    return cmd.time_spec;
+}
+
+uhd::time_spec_t WorkerRx::doRx(double freq, double sec, const uhd::time_spec_t& time)
+{
+    m_config.device->set_rx_freq(freq);
+    uhd::stream_cmd_t cmd(uhd::stream_cmd_t::STREAM_MODE_NUM_SAMPS_AND_DONE);
+    cmd.num_samps = m_config.samples;
+    cmd.stream_now = false;
+
+    cmd.time_spec = time + uhd::time_spec_t(0, sec);
+    m_config.stream->issue_stream_cmd(cmd);
+
+    return cmd.time_spec;
+}
+
+
+void WorkerRx::work()
+{
+    uhd::set_thread_priority_safe();
+    uhd::rx_metadata_t metadata;
+
+    std::vector<void*> buffers = std::vector<void*>(1);
+    Samples buffer = new Complex[m_config.samples];
+    buffers[0] = buffer;
+
+    double frequency = m_config.startFrequency;
+    int column = 0;
+    const double extra = 0.1;
+    bool first = true;
+    uhd::time_spec_t lastLaunch, newTime;
+    while(getActive() && frequency < m_config.endFrequency)
+    {
+        if(first)
+        {
+            lastLaunch = doFirstRx();
+            first = false;
+        }
+        else
+            lastLaunch = doRx(frequency, extra, newTime);
+
+
+        m_config.stream->recv(buffers, m_config.samples, metadata, m_config.timeout, false);
+
+        if(checkMetadataError(metadata))
+            break;
+#ifdef DUMP_RAW
+        Dump(buffer);
+        break;
+#else
+        m_config.buffer->lock();
+        m_config.buffer->enqueue(new FFTJob<Complex>(buffer, m_config.samples, column++));
+        m_config.buffer->unlock();
+#endif
+
+        newTime = m_config.device->get_time_now();
+        uhd::time_spec_t frequencyFix = newTime - lastLaunch;
+        frequency += (frequencyFix.get_real_secs() + extra) * m_config.signalSpeed;
+
+        auto t = QTime::fromMSecsSinceStartOfDay(lastLaunch.to_ticks(1000));
+        qDebug() << t.toString(QString("hh:mm:ss:zzz")) << " " << frequency;
+    }
+
+    emit done();
+    getThread()->exit(0);
+    delete[] buffer;
+}
+
+#ifdef DUMP_RAW
+void WorkerRx::Dump(Complex* buffer)
+{
+    QFile file(QString("dump.log"));
+    if(!file.open(QIODevice::Append | QIODevice::WriteOnly))
+        qDebug("unable to dump raw samples");
+    else
+    {
+        QTextStream stream(&file);
+        for(size_t i = 0; i < m_config.samples; i++)
+        {
+            stream << buffer[i].real() << " " << buffer[i].imag();
+            endl(stream);
+        }
+        file.close();
+    }
+}
+#endif

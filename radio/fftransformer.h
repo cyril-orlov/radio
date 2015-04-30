@@ -1,6 +1,7 @@
 #ifndef FFTRANSFORMER_H
 #define FFTRANSFORMER_H
 
+#include "stdafx.h"
 #include <QObject>
 #include <QQueue>
 #include <QTimer>
@@ -9,27 +10,26 @@
 #include "fftw3.h"
 #include "workerfft.h"
 
-//todo: a worker, make sample queue, ttransform fixed count - 10000
 class FFTransformer : public QObject
 {
     Q_OBJECT
 
 private:
-    WorkerFFT* m_worker;
-    QQueue<Complex> m_data;
-    QThread *m_thread;
+    WorkerFFT** m_workers;
+    QThread** m_threads;
+    char m_workersCount;
+    fftw_complex* m_complexSub;
+    void fillComplexSub();
+    size_t m_bufferSize;
 
 public:
-    explicit FFTransformer();
+    explicit FFTransformer(QObject* parent, char workersCount = 1);
+    void start();
+    void setDataSource(FFTJobManager *dataSource);
     ~FFTransformer();
 
 signals:
-    void dataProcessed(QVector<double> data);
-
-public slots:
-    void onDataReceived(Complex * data, size_t count);
-    void onDataProcessed(QVector<double> &data);
-
+    void dataProcessed(double* data, size_t column, size_t length);
 };
 
 #endif

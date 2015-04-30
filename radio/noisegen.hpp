@@ -1,13 +1,18 @@
 // generates random samples
 // uses Park-Miller RNG
+#ifndef NOISEGEN_HPP
+#define NOISEGEN_HPP
 
+#include "stdafx.h"
 #include <numeric>
 #include <complex>
 #include <QThread>
 #include <QMutex>
 #include <QVector>
+#include "jobmanager.hpp"
 
 typedef std::complex<double> Complex;
+typedef JobManager<FFTJob<Complex>*> FFTJobManager;
 
 class NoiseGen : public QObject
 {
@@ -15,23 +20,34 @@ class NoiseGen : public QObject
 
 private:
     long m_seed;
-    Complex *m_buffer;
-    size_t m_bufferSize;
-    QMutex* m_bufferLock;
-    int m_sleepTime, m_sleepPeriod, m_currentSleepStage;
-    bool m_active;
+    FFTJobManager m_dataSource;
+    QMutex m_bufferLock;
+    int m_sleepTime;
+    bool m_active, m_isFile;
+    const QString m_filename;
 
 public:
-    NoiseGen(int sleepTime = 1, int sleepPeriod = 5, long seed = 1, size_t bufferSize = 1 << 9)
-        : m_buffer(new Complex[bufferSize]),
-          m_bufferSize(bufferSize),
-          m_seed(seed),
-          m_bufferLock(new QMutex()),
-          m_sleepTime(sleepTime),
-          m_sleepPeriod(sleepPeriod),
-          m_active(true),
-          m_currentSleepStage(0)
+    NoiseGen(int sleepTime = 0, long seed = 1) :
+        m_seed(seed),
+        m_sleepTime(sleepTime),
+        m_active(true),
+        m_dataSource(),
+        m_isFile(false)
     {
+    }
+
+    NoiseGen(int sleepTime, const QString& filename) :
+        m_sleepTime(sleepTime),
+        m_active(true),
+        m_dataSource(),
+        m_isFile(true),
+        m_filename(filename)
+    {
+    }
+
+    FFTJobManager* getDataSource()
+    {
+        return &m_dataSource;
     }
 
     void deactivate()
@@ -41,59 +57,68 @@ public:
 
     Complex next()
     {
-        double max = std::numeric_limits<long>::max();
+        double max = (long)-1;
         double re = nextInt() / max, im = nextInt() / max;
         return Complex(re, im);
     }
 
     ~NoiseGen()
     {
-        qDebug("NoiseGen destroyed");
-        delete m_buffer;
-        delete m_bufferLock;
     }
 
 public slots:
     void onStart()
     {
-        qDebug("NoiseGen started with buffer size = %s", qPrintable(QString::number(m_bufferSize)));
-        while(m_active)
+        qDebug("NoiseGen started");
+        if(m_isFile)
+            workFile();
+        else
+            workRng();
+
+        if(!m_active)
+            qDebug("NoiseGen stopped prematurely.");
+        else
+            qDebug("NoiseGen stopped");
+        QThread::currentThread()->exit();
+    }
+
+private:
+    void workFile()
+    {
+        const size_t size = 56384, cols = 1;
+        Complex* buffer = new Complex[size];
+        QFile file(m_filename);
+        if(!file.open(QIODevice::ReadOnly))
+            return;
+        QDataStream stream(&file);
+        stream.setByteOrder(QDataStream::LittleEndian);
+        short sample[2];
+        size_t i = 0;
+        while(!stream.atEnd() && i < size)
         {
-            static int bufferIndex = 0;
-            if(bufferIndex == m_bufferSize)
-            {
-                emitReceived();
-                bufferIndex = 0;
-            }
-
-            m_bufferLock->lock();
-            m_buffer[bufferIndex++] = next();
-            m_bufferLock->unlock();
-
-            if(m_currentSleepStage == m_sleepPeriod)
-            {
-                m_currentSleepStage = 0;
-                QThread::msleep(m_sleepTime);
-            }
-            else
-                m_currentSleepStage++;
+            stream >> sample[0] >> sample[1];
+            buffer[i++] = Complex(sample[0] / 65536.0, sample[1] / 65536.0);
+        }
+        for (int i = 0; i < cols && m_active; ++i)
+        {
+            m_dataSource.enqueue(new FFTJob<Complex>(buffer, size, i));
+            QThread::msleep(m_sleepTime);
         }
     }
 
-signals:
-    void received(Complex *data, size_t count);
-
-private:
-    void emitReceived()
+    void workRng()
     {
-        m_bufferLock->lock();
-
-        Complex* data = new Complex[m_bufferSize];
-        memcpy(data, m_buffer, sizeof(Complex) * m_bufferSize);
-        emit received(data, m_bufferSize);
-        qDebug("Noise emitted");
-
-        m_bufferLock->unlock();
+        const size_t size = 54545, cols = 35;
+        Complex* buffer = new Complex[size];
+        for (int i = 0; i < cols && m_active; ++i)
+        {
+            for (int j = 0; j < size; ++j)
+                buffer[j] = next();
+            QThread::msleep(m_sleepTime);
+            m_dataSource.lock();
+            m_dataSource.enqueue(new FFTJob<Complex>(buffer, size, i));
+            m_dataSource.unlock();
+        }
     }
 
     unsigned long nextInt()
@@ -106,3 +131,4 @@ private:
         return m_seed;
     }
 };
+#endif

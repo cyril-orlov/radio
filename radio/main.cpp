@@ -1,10 +1,11 @@
+
 #include "mainwindow.h"
-#include "timer.h"
 #include "options.h"
 #include "optionsdialog.h"
 #include "receiver.h"
 #include "fftransformer.h"
-#include "noisegen.hpp"
+#include "controller.hpp"
+#include "testcontroller.hpp"
 
 #include <QApplication>
 #include <QTime>
@@ -23,47 +24,46 @@ int main(int argc, char *argv[])
     MainWindow w;
     OptionsDialog d;
     QObject::connect(&w, &MainWindow::optionsClicked, &d, &OptionsDialog::exec);
-    QObject::connect(&d, &OptionsDialog::optionsUpdated, &w, &MainWindow::onOptionsChanged);
-    Timer timer(&w);
-    timer.work();
-    QObject::connect(&timer, &Timer::done, &w, &MainWindow::timerDone);
-    QObject::connect(&timer, &Timer::tick, &w, &MainWindow::timerUpdate);
-    QObject::connect(&d, &OptionsDialog::accepted, &timer, &Timer::checkOptions);
 
-    FFTransformer fft;
-    QObject::connect(&fft, &FFTransformer::dataProcessed, &w, &MainWindow::onChartChanged);
+    bool random = 1;//argc == 2 && QString(argv[1]).compare("-random") == 0;
+    AbstractController* controller;
 
-    Receiver r;
-
-    NoiseGen ng;
-    QThread* ngThread = nullptr;
-
-    if(argc > 1 && QString(argv[1]).compare("-random") == 0)
-    {
-        ngThread = new QThread();
-        ng.moveToThread(ngThread);
-        QObject::connect(ngThread, &QThread::started, &ng, &NoiseGen::onStart);
-        QObject::connect(&ng, &NoiseGen::received, &fft, &FFTransformer::onDataReceived);
-        ngThread->start();
-    }
+    if(random)
+        controller = new TestController();
     else
-    {
-        QObject::connect(&d, &OptionsDialog::optionsUpdated, &r, &Receiver::onOptionsUpdated);
-        QObject::connect(&timer, &Timer::done, &r, &Receiver::onStarted);
-        QObject::connect(&r, &Receiver::dataReceived, &fft, &FFTransformer::onDataReceived);
-    }
+        controller = new Controller();
 
+    QObject::connect(controller,
+                     &AbstractController::dataProcessed,
+                     &w,
+                     &MainWindow::onChartChanged
+                     );
+
+    QObject::connect(controller,
+                     &AbstractController::listenChanged,
+                     &w,
+                     &MainWindow::listenChanged
+                     );
+
+    QObject::connect(&w,
+                     &MainWindow::startClicked,
+                     controller,
+                     &AbstractController::listen
+                     );
+
+    QObject::connect(&w,
+                     &MainWindow::stopClicked,
+                     controller,
+                     &AbstractController::dontListen
+                     );
+
+
+    w.listenChanged(false);
     w.show();
 
     int result = a.exec();
-
-    if(ngThread)
-    {
-        ng.deactivate();
-        ngThread->quit();
-        ngThread->wait();
-        delete ngThread;
-    }
-
+    delete controller;
+  //  Options::getInstance()->save();
     return result;
 }
+
