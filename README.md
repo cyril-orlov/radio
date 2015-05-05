@@ -1,4 +1,4 @@
 radio
 =====
 
-real-time spectum builder for USRP-N210
+real-time spectrum builder for USRP-N210
