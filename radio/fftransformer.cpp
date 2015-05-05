@@ -62,23 +62,26 @@ void FFTransformer::fillComplexSub()
 #ifdef DUMP_RAW
     return;
 #endif
+    auto plan = fftw_plan_dft_1d(m_bufferSize, m_complexSub, m_complexSub, FFTW_FORWARD, FFTW_ESTIMATE);
     double speed = Options::getInstance()->getSignalSpeed();
     double rxRate = Options::getInstance()->getBand();
     for(size_t i = 0; i < m_bufferSize; i++)
     {
-        double t = (i / (double)m_bufferSize) / rxRate;
+        double t = i / rxRate;
         t *= t;
 
         auto iter = *(m_complexSub + i);
         iter[0] = cos(M_PI * t * speed);
         iter[1] = -sin(M_PI * t * speed);
-        //todo fill
     }
+
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
 }
 
 FFTransformer::~FFTransformer()
 {
-#ifdef DUMP_RING
+#ifdef DUMP_RAW
     return;
 #endif
     if(m_complexSub != nullptr)

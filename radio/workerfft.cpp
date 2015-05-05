@@ -73,7 +73,7 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
 
     for (size_t i = 0; i < steps; i++)
     {
-        // forward
+        // fill
         for (int j = 0; j < m_bufferSize; ++j)
         {
             auto iter = *(m_sampleBuffer + j);
@@ -81,17 +81,19 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
             iter[0] = jobBuffer[j + i * m_bufferStep].real();
             iter[1] = jobBuffer[j + i * m_bufferStep].imag();
         }
+
+        // forward
         fftw_execute(m_plan);
 
         // convolute
         for(size_t j = 0; j < m_bufferSize; j++)
         {
-            auto iter = *(m_spectrumBuffer + j);
-            auto iterSub = *(m_complexSub + j);
-            auto re = iter[0] * iterSub[0] - iter[1] * iterSub[1];
-            auto im = iter[1] * iterSub[0] + iter[0] * iterSub[1];
-            iter[0] = re;
-            iter[1] = im;
+            auto i1 = *(m_spectrumBuffer + j);
+            auto i2 = *(m_complexSub + j);
+            auto re = i1[0] * i2[0] - i1[1] * i2[1];
+            auto im = i1[1] * i2[0] + i1[0] * i2[1];
+            i1[0] = re;
+            i1[1] = im;
         }
 
         // backward
@@ -101,7 +103,17 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
         buffer[i] = (first[0] * first[0] + first[1] * first[1]) / m_bufferSize;
     }
 #ifdef DUMP_FFT
-    QFile file(QString("dump.log"));
+    dumpFFT(buffer, steps);
+    delete [] buffer;
+#else
+    emit digested(buffer, job->index(), steps);
+#endif
+}
+
+#ifdef DUMP_FFT
+void WorkerFFT::dumpFFT(double* buffer, size_t steps)
+{
+    QFile file(QString("fftdump.log"));
     if(!file.open(QIODevice::Append | QIODevice::WriteOnly))
         qDebug("unable to dump fft");
     else
@@ -112,13 +124,10 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
             stream << buffer[i];
             endl(stream);
         }
-        file.close();        
+        file.close();
     }
-    delete [] buffer;
-#else
-    emit digested(buffer, job->index(), steps);
-#endif
 }
+#endif
 
 void WorkerFFT::afterDestroy()
 {
