@@ -71,18 +71,21 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
     size_t steps = (job->length() - m_bufferSize) / m_bufferStep + 1;
     double* buffer = new double[steps];
 
+#ifdef DUMP_RAW
+    DumpRaw(job);
+#endif
+
     for (size_t i = 0; i < steps; i++)
     {
-        // fill
+        // forward
         for (int j = 0; j < m_bufferSize; ++j)
         {
-            auto iter = *(m_sampleBuffer + j);
+            auto iter = m_sampleBuffer[j];
             Q_ASSERT(j + i * m_bufferStep < job->length());
             iter[0] = jobBuffer[j + i * m_bufferStep].real();
             iter[1] = jobBuffer[j + i * m_bufferStep].imag();
         }
 
-        // forward
         fftw_execute(m_plan);
 
         // convolute
@@ -102,18 +105,18 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
         auto first = *m_sampleBuffer;
         buffer[i] = (first[0] * first[0] + first[1] * first[1]) / m_bufferSize;
     }
+
 #ifdef DUMP_FFT
-    dumpFFT(buffer, steps);
-    delete [] buffer;
-#else
-    emit digested(buffer, job->index(), steps);
+    DumpFFT(buffer, steps);
 #endif
+
+    emit digested(buffer, job->index(), steps);
 }
 
 #ifdef DUMP_FFT
-void WorkerFFT::dumpFFT(double* buffer, size_t steps)
+void WorkerFFT::DumpFFT(double* buffer, size_t steps)
 {
-    QFile file(QString("fftdump.log"));
+    QFile file(QString("dumpfft.log"));
     if(!file.open(QIODevice::Append | QIODevice::WriteOnly))
         qDebug("unable to dump fft");
     else
@@ -122,6 +125,26 @@ void WorkerFFT::dumpFFT(double* buffer, size_t steps)
         for(size_t i = 0; i < steps; i++)
         {
             stream << buffer[i];
+            endl(stream);
+        }
+        file.close();
+    }
+}
+#endif
+
+#ifdef DUMP_RAW
+void WorkerFFT::DumpRaw(FFTJob<Complex> *job)
+{
+    QFile file(QString("dumpraw" + QString::number(job->index()) + ".log"));
+    if(!file.open(QIODevice::Append | QIODevice::WriteOnly))
+        qDebug("unable to dump raw samples");
+    else
+    {
+        auto b = job->getBuffer();
+        QTextStream stream(&file);
+        for(size_t i = 0; i < job->length(); i++)
+        {
+            stream << b[i].real() << " " << b[i].imag();
             endl(stream);
         }
         file.close();

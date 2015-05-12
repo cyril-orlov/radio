@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
     OptionsDialog d;
     QObject::connect(&w, &MainWindow::optionsClicked, &d, &OptionsDialog::exec);
 
-    bool random = 1;//argc == 2 && QString(argv[1]).compare("-random") == 0;
+    bool random = argc == 2 && QString(argv[1]).compare("-random") == 0;
     AbstractController* controller;
 
     if(random)

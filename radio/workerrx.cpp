@@ -48,21 +48,17 @@ bool WorkerRx::checkMetadataError(const uhd::rx_metadata_t& metadata)
 
 void WorkerRx::timeFix()
 {
-    int msec = QTime::currentTime().msec();
+    while(QTime::currentTime().msec() > 500)
+        QThread::msleep(100);
 
-    if(msec > 500)
-        QThread::msleep(1000 - msec);
-
-    m_config.device->set_time_next_pps(
-                uhd::time_spec_t::from_ticks(
-                    (QTime::currentTime().msecsSinceStartOfDay() / 1000) * 1000 + 1000, 1000
-                )
-            );
+    int nextSecond = QTime::currentTime().msecsSinceStartOfDay() / 1000 + 1;
+    m_config.device->set_time_next_pps(uhd::time_spec_t::from_ticks(nextSecond, 1));
 
     QThread::msleep(1100);
-    qDebug() << "3 " << QTime::currentTime().toString("hh:mm:ss:zzz");
+
+    qDebug() << "T " << QTime::currentTime().toString("hh:mm:ss:zzz");
     auto t = QTime::fromMSecsSinceStartOfDay(m_config.device->get_time_now().to_ticks(1000));
-    qDebug() << "3U" << t.toString(QString("hh:mm:ss:zzz"));
+    qDebug() << "TU" << t.toString(QString("hh:mm:ss:zzz"));
 }
 
 uhd::time_spec_t WorkerRx::doFirstRx()
@@ -118,25 +114,21 @@ void WorkerRx::work()
             lastLaunch = doRx(frequency, extra, newTime);
 
 
-        m_config.stream->recv(buffers, m_config.samples, metadata, m_config.timeout, false);
+        auto c = m_config.stream->recv(buffers, m_config.samples, metadata, m_config.timeout, false);
 
-        if(checkMetadataError(metadata))
+        if(checkMetadataError(metadata) || !c)
             break;
-#ifdef DUMP_RAW
-        Dump(buffer);
-        break;
-#else
+
         m_config.buffer->lock();
         m_config.buffer->enqueue(new FFTJob<Complex>(buffer, m_config.samples, column++));
         m_config.buffer->unlock();
-#endif
+
+        auto t = QTime::fromMSecsSinceStartOfDay(lastLaunch.to_ticks(1000));
+        qDebug() << t.toString(QString("hh:mm:ss:zzz")) << " " << frequency;
 
         newTime = m_config.device->get_time_now();
         uhd::time_spec_t frequencyFix = newTime - lastLaunch;
         frequency += (frequencyFix.get_real_secs() + extra) * m_config.signalSpeed;
-
-        auto t = QTime::fromMSecsSinceStartOfDay(lastLaunch.to_ticks(1000));
-        qDebug() << t.toString(QString("hh:mm:ss:zzz")) << " " << frequency;
     }
 
     emit done();
@@ -144,21 +136,3 @@ void WorkerRx::work()
     delete[] buffer;
 }
 
-#ifdef DUMP_RAW
-void WorkerRx::Dump(Complex* buffer)
-{
-    QFile file(QString("dump.log"));
-    if(!file.open(QIODevice::Append | QIODevice::WriteOnly))
-        qDebug("unable to dump raw samples");
-    else
-    {
-        QTextStream stream(&file);
-        for(size_t i = 0; i < m_config.samples; i++)
-        {
-            stream << buffer[i].real() << " " << buffer[i].imag();
-            endl(stream);
-        }
-        file.close();
-    }
-}
-#endif

@@ -29,10 +29,13 @@ private:
     QMutex * m_accessMutex;
     FFTJobManager* m_dataSource;
     void handleJob(FFTJob<Complex>* job);
-#ifdef DUMP_FFT
-    void dumpFFT(double *buffer, size_t steps);
-#endif
     void afterDestroy();
+#ifdef DUMP_FFT
+    void DumpFFT(double* buffer, size_t steps);
+#endif
+#ifdef DUMP_RAW
+    void DumpRaw(FFTJob<Complex> *job);
+#endif
 
 public:
     QMutex* mutex();
