@@ -20,7 +20,7 @@ class WorkerFFT : public Worker
 
 public:
     WorkerFFT(QThread* thread, size_t bufferSize, size_t bufferStep);    
-
+    void setSafeExit();
 private:
     fftw_complex *m_sampleBuffer, *m_spectrumBuffer, *m_complexSub;
     fftw_plan m_plan, m_inversePlan;
@@ -28,10 +28,11 @@ private:
     QThread * m_thread;
     QMutex * m_accessMutex;
     FFTJobManager* m_dataSource;
+    bool m_safeExit;
     void handleJob(FFTJob<Complex>* job);
     void afterDestroy();
 #ifdef DUMP_FFT
-    void DumpFFT(double* buffer, size_t steps);
+    void DumpFFT(FilterResult* job);
 #endif
 #ifdef DUMP_RAW
     void DumpRaw(FFTJob<Complex> *job);
@@ -45,7 +46,8 @@ public:
     void setDataSource(FFTJobManager* dataSource);
 
 signals:
-    void digested(double* data, size_t length, size_t column);
+    void digested(FilterResult *r);
+    void finished();
 };
 
 #endif // WORKERFFT_H

@@ -7,6 +7,7 @@ WorkerFFT::WorkerFFT(QThread* thread, size_t bufferSize, size_t bufferStep) :
     m_bufferStep(bufferStep),
     m_plan(nullptr),
     m_dataSource(nullptr),
+    m_safeExit(false),
     Worker(thread)
 {
     if(m_bufferSize <= m_bufferStep)
@@ -28,18 +29,34 @@ void WorkerFFT::init(fftw_complex* complexSub)
     m_inversePlan = fftw_plan_dft_1d(m_bufferSize, m_spectrumBuffer, m_sampleBuffer, FFTW_BACKWARD, FFTW_ESTIMATE);
 }
 
+void WorkerFFT::setSafeExit()
+{
+    m_safeExit = true;
+}
+
 void WorkerFFT::work()
 {
     qDebug("FFTWorker started with buffer size = %s and step = %s",
             qPrintable(QString::number(m_bufferSize)),
             qPrintable(QString::number(m_bufferStep)));
 
+#define exit_or_wait \
+    if(!m_safeExit)\
+    {\
+        QThread::msleep(10);\
+        continue;\
+    }\
+    else\
+    {\
+        emit finished();\
+        break;\
+    }
+
     while(getActive())
     {
         if(!m_dataSource)
         {
-            QThread::msleep(10);
-            continue;
+            exit_or_wait
         }
 
         m_dataSource->lock();
@@ -47,9 +64,10 @@ void WorkerFFT::work()
         if(!m_dataSource->any())
         {
             m_dataSource->unlock();
-            QThread::msleep(10);
-            continue;
+
+            exit_or_wait
         }
+
         auto job = m_dataSource->dequeue();
 
         m_dataSource->unlock();
@@ -57,7 +75,7 @@ void WorkerFFT::work()
         if(job != nullptr)
             handleJob(job);
     }
-
+#undef exit_or_wait
 }
 
 void WorkerFFT::setDataSource(FFTJobManager* dataSource)
@@ -103,28 +121,30 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
         fftw_execute(m_inversePlan);
 
         auto first = *m_sampleBuffer;
-        buffer[i] = (first[0] * first[0] + first[1] * first[1]) / m_bufferSize;
+        buffer[i] = log10((first[0] * first[0] + first[1] * first[1]) / m_bufferSize);
     }
 
+    auto result = new FilterResult(buffer, steps, job->frequency());
 #ifdef DUMP_FFT
-    DumpFFT(buffer, steps);
+    DumpFFT(result);
 #endif
 
-    emit digested(buffer, job->index(), steps);
+    emit digested(result);
 }
 
 #ifdef DUMP_FFT
-void WorkerFFT::DumpFFT(double* buffer, size_t steps)
+void WorkerFFT::DumpFFT(FilterResult* job)
 {
-    QFile file(QString("dumpfft.log"));
+    QFile file(QString("dumpfft-" + QString::number(job->frequency(), 'f', 3) + "mhz.log"));
     if(!file.open(QIODevice::Append | QIODevice::WriteOnly))
         qDebug("unable to dump fft");
     else
     {
+        auto b = job->getBuffer();
         QTextStream stream(&file);
-        for(size_t i = 0; i < steps; i++)
+        for(size_t i = 0; i < job->length(); i++)
         {
-            stream << buffer[i];
+            stream << b[i];
             endl(stream);
         }
         file.close();
@@ -135,7 +155,7 @@ void WorkerFFT::DumpFFT(double* buffer, size_t steps)
 #ifdef DUMP_RAW
 void WorkerFFT::DumpRaw(FFTJob<Complex> *job)
 {
-    QFile file(QString("dumpraw" + QString::number(job->index()) + ".log"));
+    QFile file(QString("dumpraw-" + QString::number(job->frequency(), 'f', 3) + "mhz.log"));
     if(!file.open(QIODevice::Append | QIODevice::WriteOnly))
         qDebug("unable to dump raw samples");
     else

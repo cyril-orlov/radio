@@ -146,6 +146,16 @@ public:
     char getFFTThreads()const  { return m_fftThreads; }
     void setFFTThreads(const char& other) { m_fftThreads = other; }
 
+public:
+    static double calculateActualBand(double actualBand, double speed)
+    {
+        auto band = getInstance()->getBand();
+        size_t window = band * actualBand / speed;
+        size_t i = 2;
+        while ((i *= 2) < window) ;
+        window = i;
+        return i * speed / band;
+    }
 
 #pragma endregion
 

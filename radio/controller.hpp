@@ -49,19 +49,13 @@ public slots:
             delete m_rx;
             m_rx = nullptr;
         }
-
-        if(m_scheduler != nullptr)
-        {
-            delete m_scheduler;
-            m_scheduler = nullptr;
-        }
     }
 
     virtual void dontListen()
     {
         if(m_scheduler != nullptr)
         {
-            delete m_scheduler;
+            m_scheduler->deleteLater();
             m_scheduler = nullptr;
             emit listenChanged(false);
         }
@@ -81,6 +75,7 @@ public slots:
 
     void launch()
     {
+#pragma region //shouldn't happen, just for consistency
         if(working())
         {
             showWarning(nullptr, "Ошибка запуска", "Анализ уже запущен.");
@@ -92,33 +87,49 @@ public slots:
             listen(QTime::currentTime());
             return;
         }
+#pragma endregion
 
         try
         {
             qDebug() << "launching at " << QTime::currentTime().toString("hh:mm:ss:zzz");
-
+            m_workQueue.clear();
             m_rx = new Receiver(this, m_scheduler->when(), &m_workQueue);
-            QObject::connect(m_rx, &Receiver::done, this, &Controller::done);
+            QObject::connect(m_rx, &Receiver::done, this, &Controller::rxDone);
 
             m_fft = new FFTransformer(this, Options::getInstance()->getFFTThreads());
             QObject::connect(m_fft, &FFTransformer::dataProcessed, this, &Controller::dataProcessed);
             m_fft->start();
             m_fft->setDataSource(&m_workQueue);
         }
-        catch(QString& message)
+        catch(const QString& message)
         {
             showWarning(nullptr, "Ошибка запуска", message);
+
+            stop();
         }
+        dontListen();
     }
-public slots:
-    void done()
+private slots:
+    void rxDone()
     {
-        if(m_rx != nullptr)
-        {
-            delete m_rx;
-            m_rx = nullptr;
+        delete m_rx;
+        m_rx = nullptr;
+        if(m_fft != nullptr)
+            m_fft->setSafeExit();
+        else
             emit listenChanged(false);
-        }
+
+        qDebug("RX part done");
+    }
+
+    void fftDone()
+    {
+        delete m_fft;
+        m_fft = nullptr;
+        if(m_rx == nullptr)
+            emit listenChanged(false);
+
+        qDebug("FFT part done");
     }
 };
 #endif // CONTROLLER_H

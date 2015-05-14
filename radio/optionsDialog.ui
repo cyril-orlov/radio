@@ -90,6 +90,12 @@
      <property name="suffix">
       <string> сек</string>
      </property>
+     <property name="decimals">
+      <number>3</number>
+     </property>
+     <property name="singleStep">
+      <double>0.010000000000000</double>
+     </property>
     </widget>
    </item>
    <item>
@@ -104,7 +110,7 @@
       <string> КГц</string>
      </property>
      <property name="decimals">
-      <number>3</number>
+      <number>1</number>
      </property>
      <property name="maximum">
       <double>10000000.000000000000000</double>
@@ -124,6 +130,13 @@
      </property>
      <property name="maximum">
       <double>10000.000000000000000</double>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="calculatedBandLabel">
+     <property name="text">
+      <string>Рассчетная полоса: </string>
      </property>
     </widget>
    </item>
@@ -173,5 +186,40 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>actualBandEdit</sender>
+   <signal>valueChanged(double)</signal>
+   <receiver>OptionsDialog</receiver>
+   <slot>onRecalculateBand()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>129</x>
+     <y>129</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>129</x>
+     <y>119</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>signalSpeedBox</sender>
+   <signal>valueChanged(QString)</signal>
+   <receiver>OptionsDialog</receiver>
+   <slot>onRecalculateBand()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>129</x>
+     <y>155</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>129</x>
+     <y>119</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
+ <slots>
+  <slot>onRecalculateBand()</slot>
+ </slots>
 </ui>

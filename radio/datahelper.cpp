@@ -3,23 +3,13 @@
 DataHelper::DataHelper()
     : m_accessLock(new QMutex())
 {
-    s_freq = Options::getInstance()->getStartFrequency();
-    s_endFreq = Options::getInstance()->getEndFrequency();
     setInterval(Qt::Axis::YAxis, QwtInterval(0, 1));
-}
-
-DataHelper::DataHelper(double* data, int column, size_t length)
-{
-    DataHelper();
-    if(length == 0)
-        return;
-    setData(data, column, length);
 }
 
 DataHelper::~DataHelper()
 {
-    foreach (int i, m_data.keys())
-        delete[] m_data[i].data;
+    foreach (auto i, m_data)
+        delete i;
     delete m_accessLock;
 }
 
@@ -28,30 +18,46 @@ QMutex * DataHelper::mutex()
     return m_accessLock;
 }
 
-void DataHelper::setData(double* data, int column, size_t length)
+int DataHelper::columns()const
+{
+    return m_data.size();
+}
+
+int DataHelper::rows()const
+{
+    return m_data.size() == 0 ? 0 : m_data[0]->length();
+}
+
+void DataHelper::setData(FilterResult* data)
 {
     m_accessLock->lock();
-    m_data[column].data = new double[length];
-    m_data[column].length = length;
-    memcpy(m_data[column].data, data, sizeof(double) * length);
+    m_data.push_back(data);
+
     static double zTop = 0;
-    static size_t rightmostColumn = 0;
+    static double maxFrequency = 0, minFrequency = 0;
 
-    if(column > rightmostColumn)
+    if(data->frequency() > maxFrequency)
     {
-        rightmostColumn = column;
-        setInterval(Qt::Axis::XAxis, QwtInterval(0, column));
+        maxFrequency = data->frequency();
+        setInterval(Qt::Axis::XAxis, QwtInterval(minFrequency, maxFrequency));
+    }
+    else
+    if(data->frequency() < minFrequency)
+    {
+        minFrequency = data->frequency();
+        setInterval(Qt::Axis::XAxis, QwtInterval(minFrequency, maxFrequency));
     }
 
-    for(auto i = 0; i != length; i++)
+    auto d = data->getBuffer();
+    for(auto i = 0; i != data->length(); i++)
     {
-        if(data[i] > zTop)
-            zTop = data[i];
+        if(d[i] > zTop)
+            zTop = d[i];
     }
+
     setInterval(Qt::Axis::ZAxis, QwtInterval(0, zTop));
 
     m_accessLock->unlock();
-    delete[] data;
 }
 
 double DataHelper::value(double x, double y)const
@@ -61,13 +67,27 @@ double DataHelper::value(double x, double y)const
     const double v1 = x * x + (y-c) * (y+c);
     const double v2 = x * (y+c) + x * (y+c);
 
-    return 1.0 / (v1 * v1 + v2 * v2);*/
-    if(!m_data.contains((size_t)x))
+    return 1.0 / (v1 * v1 + v2 * v2);*/    
+    if(m_data.size() == 0)
         return 0;
-    auto col = m_data[(size_t)x];
-    size_t i = (size_t)(y * col.length);
-    return col.data[i];
+
+    size_t columnIndex = 0;
+    if(m_data.size() != 1)
+    {
+        double delta = abs(x - m_data[0]->frequency()), nextDelta;
+
+        for (size_t i = 1; i < m_data.size(); i++)
+        {
+            nextDelta = abs(x - m_data[i]->frequency());
+            if(nextDelta < delta)
+            {
+                columnIndex = i;
+                delta = nextDelta;
+            }
+        }
+    }
+
+    auto col = m_data[columnIndex];
+    size_t i = (size_t)(y * col->length());
+    return col->getBuffer()[i];
 }
-
-
-double DataHelper::s_freq = -1, DataHelper::s_endFreq = -1;

@@ -6,7 +6,7 @@ Scheduler::Scheduler(QObject* parent, const QTime &when) :
     m_fired(false)
 {
     startTimer(SLEEP_MS, Qt::TimerType::PreciseTimer);
-    qDebug() << "Scheduler created for " << when.toString(QString("hh:mm:ss:zzz"));
+    qDebug() << "Scheduled to launch at " << when.toString(QString("hh:mm:ss:zzz"));
 }
 
 const QTime& Scheduler::when() const
@@ -20,9 +20,10 @@ void Scheduler::timerEvent(QTimerEvent* e)
     int msecToLaunch = now.msecsTo(m_time);
     if(msecToLaunch < SLEEP_MS + 7000)
     {
-        emit launch();
         m_fired = true;
         killTimer(e->timerId());
+
+        emit launch();
     }
 }
 

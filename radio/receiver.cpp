@@ -7,9 +7,7 @@ void showWarning(QWidget * parent, const QString &title, const QString &text);
 Receiver::Receiver(QObject* parent, QTime when, FFTJobManager* dataSource) :
     QObject(parent),
     m_thread(new QThread())
-{    
-    auto o = Options::getInstance();
-
+{
     m_worker = new WorkerRx(m_thread, configure(when, dataSource));
 
     QObject::connect(m_worker, &WorkerRx::error, this, &Receiver::onError);
@@ -26,9 +24,9 @@ WorkerRx::Config Receiver::configure(const QTime& when, FFTJobManager* dataSourc
     config.buffer = dataSource;
     config.startFrequency = o->getStartFrequency();
     config.endFrequency = o->getEndFrequency();
-    config.actualBand = o->getActualBand();
+    config.actualBand = o->calculateActualBand(o->getActualBand(), o->getSignalSpeed());
     config.signalSpeed = o->getSignalSpeed();
-    config.timeout = 5.0;
+    config.timeout = 10.0;
 
     config.samples = (size_t)
             (o->getBand() * (o->getActualBand() / config.signalSpeed + o->getExtraTicks() / 1000.0));
@@ -39,12 +37,10 @@ WorkerRx::Config Receiver::configure(const QTime& when, FFTJobManager* dataSourc
     addressHint.set(std::string("addr0"), addr);
     uhd::device_addrs_t found = uhd::device::find(addressHint);
 
-    if(found.size() == 0)
-    {
-        throw QString(QString("По адресу <strong>") +
-                          o->getAddress().toString() +
-                          QString("</strong> устройств не найдено."));
-    }
+    if(found.size() == 0)    
+        throw QString("По адресу <strong>") +
+                  o->getAddress().toString() +
+                  QString("</strong> устройств не найдено.");
 
     uhd::device_addr_t a = found[0];
     m_device = uhd::usrp::multi_usrp::make(a);

@@ -24,7 +24,7 @@ public:
     {
         m_ng = nullptr;
         m_ngthread = nullptr;
-        m_fft = new FFTransformer(this, 1);//Options::getInstance()->getFFTThreads());
+        m_fft = new FFTransformer(this, 2);//Options::getInstance()->getFFTThreads());
         QObject::connect(m_fft, &FFTransformer::dataProcessed, this, &TestController::dataProcessed);
         m_fft->start();
     }
@@ -76,9 +76,5 @@ public slots:
     {
     }
 
-    void done()
-    {
-
-    }
 };
 #endif // TESTCONTROLLER_H

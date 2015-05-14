@@ -85,7 +85,7 @@ public slots:
 private:
     void workFile()
     {
-        const size_t size = 56384, cols = 1;
+        const size_t size = 56384, cols = 3;
         Complex* buffer = new Complex[size];
         QFile file(m_filename);
         if(!file.open(QIODevice::ReadOnly))
@@ -108,7 +108,7 @@ private:
 
     void workRng()
     {
-        const size_t size = 54545, cols = 35;
+        const size_t size = 56384, cols = 35;
         Complex* buffer = new Complex[size];
         for (int i = 0; i < cols && m_active; ++i)
         {
@@ -116,7 +116,7 @@ private:
                 buffer[j] = next();
             QThread::msleep(m_sleepTime);
             m_dataSource.lock();
-            m_dataSource.enqueue(new FFTJob<Complex>(buffer, size, i));
+            m_dataSource.enqueue(new FFTJob<Complex>(buffer, size, i * 10000));
             m_dataSource.unlock();
         }
     }

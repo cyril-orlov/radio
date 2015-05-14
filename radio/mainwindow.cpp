@@ -11,7 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     qwtPlot = new CustomPlot(this);
-    ui->horizontalLayout_2->addWidget(qwtPlot);
+    qwtPlot->setContentsMargins(11, 11, 11, 11);
+    ui->scrollArea->setWidget(qwtPlot);
 }
 
 void MainWindow::optionsClicked_internal()
@@ -39,14 +40,14 @@ void MainWindow::listenChanged(bool value)
     ui->actionChange->setEnabled(!value);
 }
 
-void MainWindow::onChartChanged(double* data, int column, size_t length)
+void MainWindow::onChartChanged(FilterResult* data)
 {
     QwtPlotSpectrogram* curve = dynamic_cast<QwtPlotSpectrogram*>(qwtPlot->itemList()[0]);
     if(curve == nullptr)
         return;
 
     DataHelper* curveData = static_cast<DataHelper*>(curve->data());
-    curveData->setData(data, column, length);
+    curveData->setData(data);
     qwtPlot->replot();
 }
 

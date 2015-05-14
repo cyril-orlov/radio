@@ -5,32 +5,25 @@
 #include "qwt_raster_data.h"
 #include <complex>
 #include "options.h"
-
-typedef std::complex<double> Complex;
-
-struct DataColumn
-{
-    double* data;
-    size_t length;
-};
+#include "jobmanager.hpp"
 
 class DataHelper : public QwtRasterData
 {
 private:
-    QMap<int, DataColumn> m_data;
-    static double s_freq, s_endFreq;
+    QList<FilterResult*> m_data;
     QMutex *m_accessLock;
 
-public:
+public:    
     DataHelper();
-
-    DataHelper(double* data, int column, size_t length);
 
     ~DataHelper();
 
+    int columns() const;
+    int rows() const;
+
     QMutex * mutex();
 
-    void setData(double* data, int column, size_t length);
+    void setData(FilterResult *data);
 
     virtual double value(double x, double y) const;
 };

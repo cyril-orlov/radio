@@ -17,19 +17,28 @@ class FFTransformer : public QObject
 private:
     WorkerFFT** m_workers;
     QThread** m_threads;
-    char m_workersCount;
+    unsigned char m_workersCount, m_workersStopped;
     fftw_complex* m_complexSub;
     void fillComplexSub();
-    size_t m_bufferSize;
+    size_t m_bufferSize;    
 
 public:
+    /**
+     * @brief setSafeExit
+     * quit instead of waiting on a job container.
+     */
+    void setSafeExit();
     explicit FFTransformer(QObject* parent, char workersCount = 1);
     void start();
     void setDataSource(FFTJobManager *dataSource);
     ~FFTransformer();
 
+private slots:
+    void workerFinished();
+
 signals:
-    void dataProcessed(double* data, size_t column, size_t length);
+    void dataProcessed(FilterResult* data);
+    void finished();
 };
 
 #endif

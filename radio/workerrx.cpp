@@ -52,7 +52,7 @@ void WorkerRx::timeFix()
         QThread::msleep(100);
 
     int nextSecond = QTime::currentTime().msecsSinceStartOfDay() / 1000 + 1;
-    m_config.device->set_time_next_pps(uhd::time_spec_t::from_ticks(nextSecond, 1));
+    m_config.device->set_time_unknown_pps(uhd::time_spec_t::from_ticks(nextSecond, 1));
 
     QThread::msleep(1100);
 
@@ -87,7 +87,6 @@ uhd::time_spec_t WorkerRx::doRx(double freq, double sec, const uhd::time_spec_t&
 
     return cmd.time_spec;
 }
-
 
 void WorkerRx::work()
 {

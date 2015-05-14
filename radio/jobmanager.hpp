@@ -48,6 +48,11 @@ public:
         qDebug("enqueued (size = %s)", qPrintable(QString::number(m_queue.size())));
     }
 
+    void clear()
+    {
+        m_queue.clear();
+    }
+
     void lock()
     {
         m_lockMutex->lock();
@@ -70,30 +75,34 @@ class FFTJob
 {
 private:
     C* m_buffer;
-    size_t m_length, m_index;
+    size_t m_length;
+    double m_frequency;
 public:
     C* getBuffer()
     {
         return m_buffer;
     }
 
-    FFTJob(C* buffer, size_t length, size_t index):
+    FFTJob(C* buffer, size_t length, double frequency):
         m_length(length),
-        m_index(index)
+        m_frequency(frequency)
     {
-        m_buffer = new Complex[length];
+        m_buffer = new C[length];
         memcpy(m_buffer, buffer, length * sizeof(C));
     }
 
-    size_t index()const
+    inline size_t frequency()const
     {
-        return m_index;
+        return m_frequency;
     }
 
-    size_t length()const
+    inline size_t length()const
     {
         return m_length;
     }
 };
+
+typedef FFTJob<double> FilterResult;
+
 
 #endif // JOBMANAGER_H

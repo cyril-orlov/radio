@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/jet">
+        <file alias="jetpalette.txt">res/JETpallete.txt</file>
+    </qresource>
+</RCC>

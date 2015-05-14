@@ -79,3 +79,6 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     optionsDialog.ui \
     listendialog.ui
+
+RESOURCES += \
+    palette.qrc

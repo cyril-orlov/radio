@@ -24,7 +24,7 @@ void OptionsDialog::on_OptionsDialog_accepted()
 
     auto options = Options::getInstance();
 
-    options->setActualBand(normalizeActualBand(actualBand * 1e3, signalSpeed * 1e3));
+    options->setActualBand(actualBand * 1e3);
     options->setStartFrequency(startFrequency * 1e6);
     options->setEndFrequency(endFrequency * 1e6);
     options->setExtraTicks((size_t)(extraTicks * 1e3));
@@ -33,15 +33,19 @@ void OptionsDialog::on_OptionsDialog_accepted()
     options->save();
 }
 
-double OptionsDialog::normalizeActualBand(double value, double signalSpeed)
+void OptionsDialog::onRecalculateBand()
 {
+    double actualBand = ui->actualBandEdit->value();
+    double signalSpeed = ui->signalSpeedBox->value();
+
     auto band = Options::getInstance()->getBand();
-    size_t window = band * value / signalSpeed;
+    size_t window = band * actualBand / signalSpeed;
     size_t i = 2;
     while ((i *= 2) < window) ;
     window = i;
     double newActualBand = i * signalSpeed / band;
-    return newActualBand;
+
+    ui->calculatedBandLabel->setText(QString("Рассчетная полоса: %1 КГц").arg(newActualBand, 0, 'f', 3));
 }
 
 int OptionsDialog::exec()

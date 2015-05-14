@@ -34,7 +34,7 @@ signals:
     void stopClicked();
 
 public slots:
-    void onChartChanged(double* data, int column, size_t length);   
+    void onChartChanged(FilterResult *data);   
     void listenChanged(bool value);
 
 private:

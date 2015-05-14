@@ -22,10 +22,10 @@ public slots:
 private slots:
     void on_OptionsDialog_accepted();
 
+    void onRecalculateBand();
+
 private:
     Ui::OptionsDialog *ui;
-
-    double normalizeActualBand(double value, double signalSpeed);
 };
 
 #endif // OPTIONSDIALOG_H

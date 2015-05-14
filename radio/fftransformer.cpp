@@ -4,17 +4,18 @@
 FFTransformer::FFTransformer(QObject *parent, char workersCount):
     QObject(parent),
     m_workersCount(workersCount),
+    m_workersStopped(0),
     m_complexSub(nullptr)
 {
-#ifdef DUMP_RAW
-    return;
-#endif
     if(!fftw_init_threads())
         throw QString("unable to init fftw threading!");
 
     auto o = Options::getInstance();
 
-    m_bufferSize = o->getBand() * o->getActualBand() / o->getSignalSpeed();
+    m_bufferSize = o->getBand()
+            * Options::calculateActualBand(o->getActualBand(), o->getSignalSpeed())
+            / o->getSignalSpeed();
+
     size_t i = 2;
     while ((i *= 2) < m_bufferSize) ;
     m_bufferSize = i;
@@ -30,24 +31,26 @@ FFTransformer::FFTransformer(QObject *parent, char workersCount):
     {
         m_threads[i] = new QThread(this);
         m_workers[i] = new WorkerFFT(m_threads[i], m_bufferSize, bufferOverlap);
-        connect(m_workers[i], &WorkerFFT::digested, this, &FFTransformer::dataProcessed);
+        connect(m_workers[i], &WorkerFFT::digested, this, &FFTransformer::dataProcessed);        
+        connect(m_workers[i], &WorkerFFT::finished, this, &FFTransformer::workerFinished);
     }
 }
 
 void FFTransformer::setDataSource(FFTJobManager* dataSource)
 {
-#ifdef DUMP_RAW
-    return;
-#endif
     for (int i = 0; i < m_workersCount; ++i)
         m_workers[i]->setDataSource(dataSource);
 }
 
+
+void FFTransformer::setSafeExit()
+{
+    for (int i = 0; i < m_workersCount; ++i)
+        m_workers[i]->setSafeExit();
+}
+
 void FFTransformer::start()
 {
-#ifdef DUMP_RAW
-    return;
-#endif
     m_complexSub = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * m_bufferSize);
     fillComplexSub();
     for (int i = 0; i < m_workersCount; ++i)
@@ -59,9 +62,6 @@ void FFTransformer::start()
 
 void FFTransformer::fillComplexSub()
 {
-#ifdef DUMP_RAW
-    return;
-#endif
     auto plan = fftw_plan_dft_1d(m_bufferSize, m_complexSub, m_complexSub, FFTW_FORWARD, FFTW_ESTIMATE);
     double speed = Options::getInstance()->getSignalSpeed();
     double rxRate = Options::getInstance()->getBand();
@@ -79,11 +79,14 @@ void FFTransformer::fillComplexSub()
     fftw_destroy_plan(plan);
 }
 
+void FFTransformer::workerFinished()
+{
+    if(++m_workersStopped == m_workersCount)
+        emit finished();
+}
+
 FFTransformer::~FFTransformer()
 {
-#ifdef DUMP_RAW
-    return;
-#endif
     if(m_complexSub != nullptr)
     {
         fftw_free(m_complexSub);
