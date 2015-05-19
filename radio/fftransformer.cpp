@@ -72,10 +72,13 @@ void FFTransformer::fillComplexSub()
 
         auto iter = *(m_complexSub + i);
         iter[0] = cos(M_PI * t * speed);
-        iter[1] = -sin(M_PI * t * speed);
+        iter[1] = sin(M_PI * t * speed);
     }
 
-    fftw_execute(plan);
+    fftw_execute(plan);     
+    for(size_t i = 0; i < m_bufferSize; i++)
+      m_complexSub[i][1] *= -1;
+      
     fftw_destroy_plan(plan);
 }
 
