@@ -98,7 +98,6 @@ void WorkerRx::work()
     buffers[0] = buffer;
 
     double frequency = m_config.startFrequency;
-    int column = 0;
     const double extra = 0.1;
     bool first = true;
     uhd::time_spec_t lastLaunch, newTime;
@@ -119,7 +118,7 @@ void WorkerRx::work()
             break;
 
         m_config.buffer->lock();
-        m_config.buffer->enqueue(new FFTJob<Complex>(buffer, m_config.samples, column++));
+        m_config.buffer->enqueue(new FFTJob<Complex>(buffer, m_config.samples, frequency));
         m_config.buffer->unlock();
 
         auto t = QTime::fromMSecsSinceStartOfDay(lastLaunch.to_ticks(1000));

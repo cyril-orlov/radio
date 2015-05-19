@@ -12,6 +12,7 @@ class DataHelper : public QwtRasterData
 private:
     QList<FilterResult*> m_data;
     QMutex *m_accessLock;
+    double m_zTop;
 
 public:    
     DataHelper();
@@ -24,7 +25,7 @@ public:
     QMutex * mutex();
 
     void setData(FilterResult *data);
-
+    void clear();
     virtual double value(double x, double y) const;
 };
 

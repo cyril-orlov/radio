@@ -38,6 +38,15 @@ void MainWindow::listenChanged(bool value)
     ui->actionStart->setEnabled(!value);
     ui->actionStop->setEnabled(value);
     ui->actionChange->setEnabled(!value);
+
+    if(!value)
+        return;
+    QwtPlotSpectrogram* curve = dynamic_cast<QwtPlotSpectrogram*>(qwtPlot->itemList()[0]);
+    if(curve == nullptr)
+        return;
+    DataHelper* curveData = static_cast<DataHelper*>(curve->data());
+
+    curveData->clear();
 }
 
 void MainWindow::onChartChanged(FilterResult* data)

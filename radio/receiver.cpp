@@ -56,12 +56,6 @@ WorkerRx::Config Receiver::configure(const QTime& when, FFTJobManager* dataSourc
     return config;
 }
 
-void Receiver::onError(const QString& message)
-{
-    qDebug() << "Receiver: " << message;
-    throw message;
-}
-
 Receiver::~Receiver()
 {
     delete m_worker;

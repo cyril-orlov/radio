@@ -58,7 +58,7 @@ public slots:
             delete m_ngthread;
         }
 
-        m_ng = new NoiseGen(363, QString("test550-1.dat"));
+        m_ng = new NoiseGen(363, QString("test550-1.wav"));
         m_ngthread = new QThread(this);
         m_ng->moveToThread(m_ngthread);
         QObject::connect(m_ngthread, &QThread::started, m_ng, &NoiseGen::onStart);

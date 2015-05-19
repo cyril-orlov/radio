@@ -24,9 +24,8 @@ private:
 
     WorkerRx::Config configure(const QTime &when, FFTJobManager *dataSource);
 
-public slots:
-    void onError(const QString& message);
 signals:
+    void onError(const QString& message);
     void done();
 };
 

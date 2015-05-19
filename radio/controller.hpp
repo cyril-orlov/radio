@@ -95,9 +95,11 @@ public slots:
             m_workQueue.clear();
             m_rx = new Receiver(this, m_scheduler->when(), &m_workQueue);
             QObject::connect(m_rx, &Receiver::done, this, &Controller::rxDone);
+            QObject::connect(m_rx, &Receiver::onError, this, &Controller::rxError);
 
             m_fft = new FFTransformer(this, Options::getInstance()->getFFTThreads());
-            QObject::connect(m_fft, &FFTransformer::dataProcessed, this, &Controller::dataProcessed);
+            QObject::connect(m_fft, &FFTransformer::dataProcessed, this, &Controller::dataProcessed);           
+            QObject::connect(m_fft, &FFTransformer::finished, this, &Controller::fftDone);
             m_fft->start();
             m_fft->setDataSource(&m_workQueue);
         }
@@ -107,9 +109,19 @@ public slots:
 
             stop();
         }
-        dontListen();
+        if(m_scheduler != nullptr)
+        {
+            m_scheduler->deleteLater();
+            m_scheduler = nullptr;
+        }
     }
 private slots:
+    void rxError(const QString& message)
+    {
+        showWarning(nullptr, "Ошибка приема", message);
+        stop();
+    }
+
     void rxDone()
     {
         delete m_rx;

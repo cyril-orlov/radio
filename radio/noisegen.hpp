@@ -85,7 +85,7 @@ public slots:
 private:
     void workFile()
     {
-        const size_t size = 56384, cols = 3;
+        const size_t size = 56384, cols = 20;
         Complex* buffer = new Complex[size];
         QFile file(m_filename);
         if(!file.open(QIODevice::ReadOnly))

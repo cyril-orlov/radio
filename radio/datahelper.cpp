@@ -1,9 +1,11 @@
 #include "datahelper.h"
 
 DataHelper::DataHelper()
-    : m_accessLock(new QMutex())
+    : m_accessLock(new QMutex()),
+      m_zTop(0)
 {
     setInterval(Qt::Axis::YAxis, QwtInterval(0, 1));
+    setInterval(Qt::Axis::XAxis, QwtInterval(0, 1));
 }
 
 DataHelper::~DataHelper()
@@ -33,31 +35,40 @@ void DataHelper::setData(FilterResult* data)
     m_accessLock->lock();
     m_data.push_back(data);
 
-    static double zTop = 0;
-    static double maxFrequency = 0, minFrequency = 0;
+    double maxFrequency, minFrequency;
 
-    if(data->frequency() > maxFrequency)
+    minFrequency = maxFrequency = m_data[0]->frequency();
+    maxFrequency += 1;
+
+    for(size_t i = 1; i < m_data.size(); i++)
     {
-        maxFrequency = data->frequency();
-        setInterval(Qt::Axis::XAxis, QwtInterval(minFrequency, maxFrequency));
+        if(m_data[i]->frequency() < minFrequency)
+            minFrequency = m_data[i]->frequency();
+        else if(m_data[i]->frequency() > maxFrequency)
+            maxFrequency = m_data[i]->frequency();
     }
-    else
-    if(data->frequency() < minFrequency)
-    {
-        minFrequency = data->frequency();
-        setInterval(Qt::Axis::XAxis, QwtInterval(minFrequency, maxFrequency));
-    }
+
+    setInterval(Qt::Axis::XAxis, QwtInterval(minFrequency, maxFrequency));
+
 
     auto d = data->getBuffer();
     for(auto i = 0; i != data->length(); i++)
     {
-        if(d[i] > zTop)
-            zTop = d[i];
+        if(d[i] > m_zTop)
+            m_zTop = d[i];
     }
 
-    setInterval(Qt::Axis::ZAxis, QwtInterval(0, zTop));
+    setInterval(Qt::Axis::ZAxis, QwtInterval(0, m_zTop));
 
     m_accessLock->unlock();
+}
+
+void DataHelper::clear()
+{
+    m_data.clear();
+
+    setInterval(Qt::Axis::XAxis, QwtInterval(0, 0));
+    m_zTop = 0;
 }
 
 double DataHelper::value(double x, double y)const
@@ -70,6 +81,11 @@ double DataHelper::value(double x, double y)const
     return 1.0 / (v1 * v1 + v2 * v2);*/    
     if(m_data.size() == 0)
         return 0;
+    if(y < 0 || y > 1)
+    {
+        qDebug() << "y out of range! " << y;
+        y = std::max<double>(std::min<double>(y, 1), 0);
+    }
 
     size_t columnIndex = 0;
     if(m_data.size() != 1)
