@@ -23,25 +23,27 @@ WorkerRx::WorkerRx(QThread* thread, const Config& cfg) :
 
 bool WorkerRx::checkMetadataError(const uhd::rx_metadata_t& metadata)
 {
-    if(metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_TIMEOUT)
+    switch(metadata.error_code)
     {
-        emit error(QString("Превышено время ожидания устройства"));
-        return true;
-    }
-    else
-        if(metadata.error_code == uhd::rx_metadata_t::ERROR_CODE_OVERFLOW)
-        {
+        case uhd::rx_metadata_t::ERROR_CODE_NONE:
+           return false;
+
+        case uhd::rx_metadata_t::ERROR_CODE_TIMEOUT:
+            emit error(QString("Превышено время ожидания устройства"));
+            return true;
+        case uhd::rx_metadata_t::ERROR_CODE_OVERFLOW:
             emit error (QString("Промежуточной пропускной способности недостаточно: требуется ") +
                         QString::number(m_config.device->get_rx_rate() * WorkerRx::SAMPLE_SIZE / (1 << 31)) +
                         QString("МБ/с"));
             return true;
-        }
-        else
-            if(metadata.error_code != uhd::rx_metadata_t::ERROR_CODE_NONE)
-            {
-                emit error (QString("Ошибка") + QString::number(metadata.error_code));
-                return true;
-            }
+        case uhd::rx_metadata_t::ERROR_CODE_LATE_COMMAND:
+            emit error (QString("Недостаточно времени на подготовку."));
+            return true;
+        default:
+            emit error (QString("Ошибка") + QString::number(metadata.error_code));
+            return true;
+    }
+
 
     return false;
 }

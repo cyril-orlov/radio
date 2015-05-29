@@ -29,7 +29,7 @@ struct Address
 
     byte A, B, C, D;
 
-    bool operator != (const Address& other)const
+    bool operator == (const Address& other)const
     {
         return A == other.A && B == other.B && C == other.C && D == other.D;
     }
@@ -68,9 +68,6 @@ public:
     operator po::options_description() { return m_settings; }
 
 #pragma region props
-
-public:
-    int getFPS() const { return 60; }
 
 private:
     Address m_address;
@@ -133,12 +130,6 @@ private:
 public:
     double getActualBand()const  { return m_actualBand; }
     void setActualBand(const double& other) { m_actualBand = other; }
-
-private:
-    size_t m_RXBufferSize;
-public:
-    size_t getRXBufferSize()const  { return m_RXBufferSize; }
-    void setRXBufferSize(const size_t& other) { m_RXBufferSize = other; }
 
 private:
     char m_fftThreads;

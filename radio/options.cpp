@@ -72,11 +72,6 @@ void Options::load(const char * filename)
         setActualBand(0.4e5);
 
     bool ok;
-    size_t rx_buffer_size = settings.value("rx_buffer_size", -1).toInt(&ok);
-    if(ok && rx_buffer_size != (size_t)-1)
-        setRXBufferSize(rx_buffer_size);
-    else
-        setRXBufferSize(m_band / 60);
 
     char fftThreads = settings.value("fft_threads", -1).toInt(&ok);
     if(ok && fftThreads != -1)

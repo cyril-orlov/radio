@@ -45,7 +45,7 @@ void OptionsDialog::onRecalculateBand()
     window = i;
     double newActualBand = i * signalSpeed / band;
 
-    ui->calculatedBandLabel->setText(QString("Рассчетная полоса: %1 КГц").arg(newActualBand, 0, 'f', 3));
+    ui->calculatedBandLabel->setText(QString("Расчетная полоса: %1 КГц").arg(newActualBand, 0, 'f', 3));
 }
 
 int OptionsDialog::exec()
