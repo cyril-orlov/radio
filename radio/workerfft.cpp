@@ -19,14 +19,14 @@ WorkerFFT::WorkerFFT(QThread* thread, size_t bufferSize, size_t bufferStep) :
     setObjectName(QString("FFT"));
 }
 
-void WorkerFFT::init(fftw_complex* complexSub)
+void WorkerFFT::init(FFT_COMPLEX* complexSub)
 {
-    m_sampleBuffer = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * m_bufferSize);
-    m_spectrumBuffer = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * m_bufferSize);
+    m_sampleBuffer = (FFT_COMPLEX*)FFT_MALLOC(sizeof(FFT_COMPLEX) * m_bufferSize);
+    m_spectrumBuffer = (FFT_COMPLEX*)FFT_MALLOC(sizeof(FFT_COMPLEX) * m_bufferSize);
     m_complexSub = complexSub;
 
-    m_plan = fftw_plan_dft_1d(m_bufferSize, m_sampleBuffer, m_spectrumBuffer, FFTW_FORWARD, FFTW_ESTIMATE);
-    m_inversePlan = fftw_plan_dft_1d(m_bufferSize, m_spectrumBuffer, m_sampleBuffer, FFTW_BACKWARD, FFTW_ESTIMATE);
+    m_plan = FFT_CREATE_PLAN(m_bufferSize, m_sampleBuffer, m_spectrumBuffer, FFTW_FORWARD, FFTW_ESTIMATE);
+    m_inversePlan = FFT_CREATE_PLAN(m_bufferSize, m_spectrumBuffer, m_sampleBuffer, FFTW_BACKWARD, FFTW_ESTIMATE);
 }
 
 void WorkerFFT::setSafeExit()
@@ -87,7 +87,7 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
 {
     auto jobBuffer = job->getBuffer();
     size_t steps = (job->length() - m_bufferSize) / m_bufferStep + 1;
-    double* buffer = new double[steps];
+    T_REAL* buffer = new T_REAL[steps];
 
 #ifdef DUMP_RAW
     DumpRaw(job);
@@ -104,7 +104,7 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
             iter[1] = jobBuffer[j + i * m_bufferStep].imag();
         }
 
-        fftw_execute(m_plan);
+        FFT_EXECUTE(m_plan);
 
         // convolute
         for(size_t j = 0; j < m_bufferSize; j++)
@@ -118,7 +118,7 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
         }
 
         // backward
-        fftw_execute(m_inversePlan);
+        FFT_EXECUTE(m_inversePlan);
 
         auto first = *m_sampleBuffer;
         buffer[i] = log10((first[0] * first[0] + first[1] * first[1]) / m_bufferSize);
@@ -174,8 +174,8 @@ void WorkerFFT::DumpRaw(FFTJob<Complex> *job)
 
 void WorkerFFT::afterDestroy()
 {
-    fftw_destroy_plan(m_plan);    
-    fftw_destroy_plan(m_inversePlan);
-    fftw_free(m_sampleBuffer);
-    fftw_free(m_spectrumBuffer);
+    FFT_DESTROY_PLAN(m_plan);
+    FFT_DESTROY_PLAN(m_inversePlan);
+    FFT_FREE(m_sampleBuffer);
+    FFT_FREE(m_spectrumBuffer);
 }

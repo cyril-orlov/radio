@@ -84,7 +84,7 @@ double DataHelper::value(double x, double y)const
     if(y < 0 || y > 1)
     {
         qDebug() << "y out of range! " << y;
-        y = std::max<double>(std::min<double>(y, 1), 0);
+        y = std::max<T_REAL>(std::min<T_REAL>(y, 1), 0);
     }
 
     size_t columnIndex = 0;

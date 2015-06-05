@@ -11,7 +11,7 @@
 
 void showWarning(QWidget * parent, const QString &title, const QString &text);
 
-typedef std::complex<double> Complex;
+typedef std::complex<T_REAL> Complex;
 typedef JobManager<FFTJob<Complex>*> FFTJobManager;
 typedef Complex *Samples;
 

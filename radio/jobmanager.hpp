@@ -102,7 +102,7 @@ public:
     }
 };
 
-typedef FFTJob<double> FilterResult;
+typedef FFTJob<T_REAL> FilterResult;
 
 
 #endif // JOBMANAGER_H

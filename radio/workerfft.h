@@ -11,7 +11,7 @@
 #include "options.h"
 #include "jobmanager.hpp"
 
-typedef std::complex<double> Complex;
+typedef std::complex<T_REAL> Complex;
 typedef JobManager<FFTJob<Complex>*> FFTJobManager;
 
 class WorkerFFT : public Worker
@@ -22,8 +22,8 @@ public:
     WorkerFFT(QThread* thread, size_t bufferSize, size_t bufferStep);    
     void setSafeExit();
 private:
-    fftw_complex *m_sampleBuffer, *m_spectrumBuffer, *m_complexSub;
-    fftw_plan m_plan, m_inversePlan;
+    FFT_COMPLEX *m_sampleBuffer, *m_spectrumBuffer, *m_complexSub;
+    FFT_PLAN m_plan, m_inversePlan;
     size_t m_bufferSize, m_bufferStep;
     QThread * m_thread;
     QMutex * m_accessMutex;
@@ -41,7 +41,7 @@ private:
 public:
     QMutex* mutex();
     virtual void work() override;
-    void init(fftw_complex *complexSub);
+    void init(FFT_COMPLEX *complexSub);
     QQueue<Complex>* getData();
     void setDataSource(FFTJobManager* dataSource);
 

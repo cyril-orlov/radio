@@ -18,7 +18,7 @@ private:
     WorkerFFT** m_workers;
     QThread** m_threads;
     unsigned char m_workersCount, m_workersStopped;
-    fftw_complex* m_complexSub;
+    FFT_COMPLEX* m_complexSub;
     void fillComplexSub();
     size_t m_bufferSize;    
 

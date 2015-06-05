@@ -34,6 +34,7 @@ CONFIG(Release, Debug|Release) {
 
 DEPENDPATH += UHDPATH
 
+LIBS += -L../fftw-3.3.4-dll32 -llibfftw3f-3
 LIBS += -L../fftw-3.3.4-dll32 -llibfftw3-3
 
 QT       += core gui

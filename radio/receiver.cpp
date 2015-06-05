@@ -48,7 +48,8 @@ WorkerRx::Config Receiver::configure(const QTime& when, FFTJobManager* dataSourc
     //m_device->set_clock_source(QString("external").toStdString());
     m_device->set_rx_rate(o->getBand());
     config.device = m_device;
-    config.stream = m_device->get_rx_stream(uhd::stream_args_t("fc64", "sc16"));
+    const char* fmt = sizeof(T_REAL) == sizeof(float) ? "fc32" : "fc64";
+    config.stream = m_device->get_rx_stream(uhd::stream_args_t(fmt, "sc16"));
 
     config.when = when;
     config.extraTicks = o->getExtraTicks();

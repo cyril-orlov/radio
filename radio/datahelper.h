@@ -12,7 +12,7 @@ class DataHelper : public QwtRasterData
 private:
     QList<FilterResult*> m_data;
     QMutex *m_accessLock;
-    double m_zTop;
+    T_REAL m_zTop;
 
 public:    
     DataHelper();

@@ -3,6 +3,7 @@
 #include "options.h"
 #include <QMessageBox>
 
+
 OptionsDialog::OptionsDialog():
     QDialog(),
     ui(new Ui::OptionsDialog())
@@ -25,8 +26,8 @@ void OptionsDialog::on_OptionsDialog_accepted()
     auto options = Options::getInstance();
 
     options->setActualBand(actualBand * 1e3);
-    options->setStartFrequency(startFrequency * 1e6);
-    options->setEndFrequency(endFrequency * 1e6);
+    options->setStartFrequency(std::min<double>(startFrequency, endFrequency) * 1e6);
+    options->setEndFrequency(std::max<double>(startFrequency, endFrequency) * 1e6);
     options->setExtraTicks((size_t)(extraTicks * 1e3));
     options->setSignalSpeed(signalSpeed * 1e3);
 

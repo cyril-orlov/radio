@@ -11,7 +11,7 @@
 #include <QVector>
 #include "jobmanager.hpp"
 
-typedef std::complex<double> Complex;
+typedef std::complex<T_REAL> Complex;
 typedef JobManager<FFTJob<Complex>*> FFTJobManager;
 
 class NoiseGen : public QObject

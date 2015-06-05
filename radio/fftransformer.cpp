@@ -7,7 +7,7 @@ FFTransformer::FFTransformer(QObject *parent, char workersCount):
     m_workersStopped(0),
     m_complexSub(nullptr)
 {
-    if(!fftw_init_threads())
+    if(!FFT_INIT_THREADS())
         throw QString("unable to init fftw threading!");
 
     auto o = Options::getInstance();
@@ -51,7 +51,7 @@ void FFTransformer::setSafeExit()
 
 void FFTransformer::start()
 {
-    m_complexSub = (fftw_complex*)fftw_malloc(sizeof(fftw_complex) * m_bufferSize);
+    m_complexSub = (FFT_COMPLEX*)FFT_MALLOC(sizeof(FFT_COMPLEX) * m_bufferSize);
     fillComplexSub();
     for (int i = 0; i < m_workersCount; ++i)
     {
@@ -62,7 +62,7 @@ void FFTransformer::start()
 
 void FFTransformer::fillComplexSub()
 {
-    auto plan = fftw_plan_dft_1d(m_bufferSize, m_complexSub, m_complexSub, FFTW_FORWARD, FFTW_ESTIMATE);
+    auto plan = FFT_CREATE_PLAN(m_bufferSize, m_complexSub, m_complexSub, FFTW_FORWARD, FFTW_ESTIMATE);
     double speed = Options::getInstance()->getSignalSpeed();
     double rxRate = Options::getInstance()->getBand();
     for(size_t i = 0; i < m_bufferSize; i++)
@@ -75,11 +75,11 @@ void FFTransformer::fillComplexSub()
         iter[1] = sin(M_PI * t * speed);
     }
 
-    fftw_execute(plan);     
+    FFT_EXECUTE(plan);
     for(size_t i = 0; i < m_bufferSize; i++)
       m_complexSub[i][1] *= -1;
       
-    fftw_destroy_plan(plan);
+    FFT_DESTROY_PLAN(plan);
 }
 
 void FFTransformer::workerFinished()
@@ -92,7 +92,7 @@ FFTransformer::~FFTransformer()
 {
     if(m_complexSub != nullptr)
     {
-        fftw_free(m_complexSub);
+        FFT_FREE(m_complexSub);
         for (int i = 0; i < m_workersCount; ++i)
             delete m_workers[i];
     }
