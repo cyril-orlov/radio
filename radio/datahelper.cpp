@@ -50,7 +50,6 @@ void DataHelper::setData(FilterResult* data)
 
     setInterval(Qt::Axis::XAxis, QwtInterval(minFrequency, maxFrequency));
 
-
     auto d = data->getBuffer();
     for(auto i = 0; i != data->length(); i++)
     {
@@ -67,18 +66,12 @@ void DataHelper::clear()
 {
     m_data.clear();
 
-    setInterval(Qt::Axis::XAxis, QwtInterval(0, 0));
+    setInterval(Qt::Axis::XAxis, QwtInterval(0, 1));
     m_zTop = 0;
 }
 
 double DataHelper::value(double x, double y)const
 {
- /*   const double c = 0.842;
-
-    const double v1 = x * x + (y-c) * (y+c);
-    const double v2 = x * (y+c) + x * (y+c);
-
-    return 1.0 / (v1 * v1 + v2 * v2);*/    
     if(m_data.size() == 0)
         return 0;
     if(y < 0 || y > 1)
@@ -104,6 +97,6 @@ double DataHelper::value(double x, double y)const
     }
 
     auto col = m_data[columnIndex];
-    size_t i = (size_t)(y * col->length());
+    size_t i = (size_t)(y * (col->length() - 1));
     return col->getBuffer()[i];
 }

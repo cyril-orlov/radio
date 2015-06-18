@@ -85,25 +85,26 @@ public slots:
 private:
     void workFile()
     {
-        const size_t size = 56384, cols = 5;
+        const size_t size = 56384, cols = 35;
         Complex* buffer = new Complex[size];
         QFile file(m_filename);
         if(!file.open(QIODevice::ReadOnly))
             return;
         QDataStream stream(&file);
         stream.setByteOrder(QDataStream::LittleEndian);
+
         short sample[2];
-        size_t i = 0;
         for (int i = 0; i < cols && m_active; ++i)
         {
             size_t j = 0;
-            while(!stream.atEnd() && j < size)
+            while(!stream.atEnd() && (j < size))
             {
                 stream >> sample[0] >> sample[1];
-                buffer[j++] = Complex(sample[0] / 65536.0, sample[1] / 65536.0);
+                buffer[j++] = Complex(sample[0] / 32767.0, sample[1] / 32767.0);
             }
 
-            m_dataSource.enqueue(new FFTJob<Complex>(buffer, size, i));
+            double f = (i / ((double)cols - 1)) * (27 - 2) + 2;
+            m_dataSource.enqueue(new FFTJob<Complex>(buffer, size, f));
             QThread::msleep(m_sleepTime);
         }
     }

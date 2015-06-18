@@ -91,7 +91,7 @@ public:
         memcpy(m_buffer, buffer, length * sizeof(C));
     }
 
-    inline size_t frequency()const
+    inline double frequency()const
     {
         return m_frequency;
     }

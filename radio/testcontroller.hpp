@@ -24,7 +24,7 @@ public:
     {
         m_ng = nullptr;
         m_ngthread = nullptr;
-        m_fft = new FFTransformer(this, 2);//Options::getInstance()->getFFTThreads());
+        m_fft = new FFTransformer(this, 3);//Options::getInstance()->getFFTThreads());
         QObject::connect(m_fft, &FFTransformer::dataProcessed, this, &TestController::dataProcessed);
         m_fft->start();
     }
@@ -58,7 +58,7 @@ public slots:
             delete m_ngthread;
         }
 
-        m_ng = new NoiseGen(363, QString("lovozero_1.dat"));
+        m_ng = new NoiseGen(363, QString("cyprus-1434631625short.wav.dat"));
         m_ngthread = new QThread(this);
         m_ng->moveToThread(m_ngthread);
         QObject::connect(m_ngthread, &QThread::started, m_ng, &NoiseGen::onStart);

@@ -1,7 +1,7 @@
 #ifndef STDAFX_H
 #define STDAFX_H
 
-//#define SINGLE_PRECISION
+#define SINGLE_PRECISION
 
 #ifdef SINGLE_PRECISION
     #define FFT_COMPLEX fftwf_complex
