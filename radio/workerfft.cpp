@@ -90,22 +90,23 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
     T_REAL* buffer = new T_REAL[steps];
 
 #ifdef DUMP_RAW
-    DumpRaw(job);
+    DumpRaw(job, 0);
 #endif
 
     for (size_t i = 0; i < steps; i++)
     {
+#define welch(i,n) (1.0-((i-0.5*(n-1)) / (0.5*(n+1))) * ((i-0.5*(n-1)) / (0.5*(n+1))))
         // forward
-        for (int j = 0; j < m_bufferSize; ++j)
+        for (int j = 0; j < m_bufferSize; j++)
         {
             auto iter = m_sampleBuffer[j];
             Q_ASSERT(j + i * m_bufferStep < job->length());
-            iter[0] = jobBuffer[j + i * m_bufferStep].real();
-            iter[1] = jobBuffer[j + i * m_bufferStep].imag();
+            iter[0] = jobBuffer[j + i * m_bufferStep].real() * welch(j, m_bufferSize);
+            iter[1] = jobBuffer[j + i * m_bufferStep].imag() * welch(j, m_bufferSize);
         }
-
         FFT_EXECUTE(m_plan);
 
+#undef welch
         // convolute
         for(size_t j = 0; j < m_bufferSize; j++)
         {
@@ -119,11 +120,19 @@ void WorkerFFT::handleJob(FFTJob<Complex>* job)
 
         // backward
         FFT_EXECUTE(m_inversePlan);
-
+ /*       if (i == 0)
+        {
+            for(size_t j = 0; j < m_bufferSize; j++)
+            {
+                jobBuffer[j] = std::complex<T_REAL> (m_sampleBuffer[j][0], m_sampleBuffer[j][1]);
+            }
+#ifdef DUMP_RAW
+            DumpRaw(job, 1);
+#endif
+        }*/
         auto first = *m_sampleBuffer;
         buffer[i] = log10((first[0] * first[0] + first[1] * first[1]) / m_bufferSize);
     }
-
     auto result = new FilterResult(buffer, steps, job->frequency());
 #ifdef DUMP_FFT
     DumpFFT(result);
@@ -153,9 +162,9 @@ void WorkerFFT::DumpFFT(FilterResult* job)
 #endif
 
 #ifdef DUMP_RAW
-void WorkerFFT::DumpRaw(FFTJob<Complex> *job)
+void WorkerFFT::DumpRaw(FFTJob<Complex> *job, int Num)
 {
-    QFile file(QString("dumpraw-" + QString::number(job->frequency(), 'f', 3) + "mhz.log"));
+    QFile file(QString("dumpraw" + QString::number (Num) + "-" + QString::number(job->frequency(), 'f', 3) + "mhz.log"));
     if(!file.open(QIODevice::Append | QIODevice::WriteOnly))
         qDebug("unable to dump raw samples");
     else
